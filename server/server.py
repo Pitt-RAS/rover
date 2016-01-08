@@ -22,17 +22,25 @@ def set_camera_servo2_position(position):
     camera_servo2.set_servo(camera_servo2_pin, pulse)
 
 def cleanup():
-    motor_servo1.stop_servo(m1pwm_pin)
-    motor_servo2.stop_servo(m2pwm_pin)
+    motor_servo_fl.stop_servo(m_fl_pwm_pin)
+    motor_servo_fr.stop_servo(m_fr_pwm_pin)
+    motor_servo_bl.stop_servo(m_bl_pwm_pin)
+    motor_servo_br.stop_servo(m_br_pwm_pin)
     PWM.cleanup()
 
-    GPIO.setup(m1pwm_pin, GPIO.OUT)
-    GPIO.setup(m2pwm_pin, GPIO.OUT)
-    GPIO.output(m1pwm_pin, GPIO.LOW)
-    GPIO.output(m2pwm_pin, GPIO.LOW)
+    GPIO.setup(m_fl_pwm_pin, GPIO.OUT)
+    GPIO.setup(m_fr_pwm_pin, GPIO.OUT)
+    GPIO.setup(m_bl_pwm_pin, GPIO.OUT)
+    GPIO.setup(m_br_pwm_pin, GPIO.OUT)
+    GPIO.output(m_fl_pwm_pin, GPIO.LOW)
+    GPIO.output(m_fr_pwm_pin, GPIO.LOW)
+    GPIO.output(m_bl_pwm_pin, GPIO.LOW)
+    GPIO.output(m_br_pwm_pin, GPIO.LOW)
 
-    GPIO.output(m1gpio_pin, GPIO.LOW)
-    GPIO.output(m2gpio_pin, GPIO.LOW)
+    GPIO.output(m_fl_gpio_pin, GPIO.LOW)
+    GPIO.output(m_fr_gpio_pin, GPIO.LOW)
+    GPIO.output(m_bl_gpio_pin, GPIO.LOW)
+    GPIO.output(m_br_gpio_pin, GPIO.LOW)
 
     GPIO.cleanup()
 
@@ -76,30 +84,50 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
             return
 
         if arrows['up']:
-            motor_servo1.set_servo(m1pwm_pin, 19990)
-            GPIO.output(m1gpio_pin, 0)
-            motor_servo2.set_servo(m2pwm_pin, 19990)
-            GPIO.output(m2gpio_pin, 0)
+            motor_servo_fl.set_servo(m_fl_pwm_pin, 19990)
+            GPIO.output(m_fl_gpio_pin, 0)
+            motor_servo_fr.set_servo(m_fr_pwm_pin, 19990)
+            GPIO.output(m_fr_gpio_pin, 0)
+            motor_servo_bl.set_servo(m_bl_pwm_pin, 19990)
+            GPIO.output(m_bl_gpio_pin, 0)
+            motor_servo_br.set_servo(m_br_pwm_pin, 19990)
+            GPIO.output(m_br_gpio_pin, 0)
         elif arrows['down']:
-            motor_servo1.set_servo(m1pwm_pin, 0)
-            GPIO.output(m1gpio_pin, 1)
-            motor_servo2.set_servo(m2pwm_pin, 0)
-            GPIO.output(m2gpio_pin, 1)
+            motor_servo_fl.set_servo(m_fl_pwm_pin, 0)
+            GPIO.output(m_fl_gpio_pin, 1)
+            motor_servo_fr.set_servo(m_fr_pwm_pin, 0)
+            GPIO.output(m_fr_gpio_pin, 1)
+            motor_servo_bl.set_servo(m_bl_pwm_pin, 0)
+            GPIO.output(m_bl_gpio_pin, 1)
+            motor_servo_br.set_servo(m_br_pwm_pin, 0)
+            GPIO.output(m_br_gpio_pin, 1)
         elif arrows['left']:
-            motor_servo1.set_servo(m1pwm_pin, 0)
-            GPIO.output(m1gpio_pin, 1)
-            motor_servo2.set_servo(m2pwm_pin, 19990)
-            GPIO.output(m2gpio_pin, 0)
+            motor_servo_fl.set_servo(m_fl_pwm_pin, 0)
+            GPIO.output(m_fl_gpio_pin, 1)
+            motor_servo_fr.set_servo(m_fr_pwm_pin, 19990)
+            GPIO.output(m_fr_gpio_pin, 0)
+            motor_servo_bl.set_servo(m_bl_pwm_pin, 0)
+            GPIO.output(m_bl_gpio_pin, 1)
+            motor_servo_br.set_servo(m_br_pwm_pin, 19990)
+            GPIO.output(m_br_gpio_pin, 0)
         elif arrows['right']:
-            motor_servo1.set_servo(m1pwm_pin, 19990)
-            GPIO.output(m1gpio_pin, 0)
-            motor_servo2.set_servo(m2pwm_pin, 0)
-            GPIO.output(m2gpio_pin, 1)
+            motor_servo_fl.set_servo(m_fl_pwm_pin, 19990)
+            GPIO.output(m_fl_gpio_pin, 0)
+            motor_servo_fr.set_servo(m_fr_pwm_pin, 0)
+            GPIO.output(m_fr_gpio_pin, 1)
+            motor_servo_bl.set_servo(m_bl_pwm_pin, 19990)
+            GPIO.output(m_bl_gpio_pin, 0)
+            motor_servo_br.set_servo(m_br_pwm_pin, 0)
+            GPIO.output(m_br_gpio_pin, 1)
         else:
-            motor_servo1.set_servo(m1pwm_pin, 0)
-            motor_servo2.set_servo(m2pwm_pin, 0)
-            GPIO.output(m1gpio_pin, 0)
-            GPIO.output(m2gpio_pin, 0)
+            motor_servo_fl.set_servo(m_fl_pwm_pin, 0)
+            GPIO.output(m_fl_gpio_pin, 1)
+            motor_servo_fr.set_servo(m_fr_pwm_pin, 0)
+            GPIO.output(m_fr_gpio_pin, 1)
+            motor_servo_bl.set_servo(m_bl_pwm_pin, 0)
+            GPIO.output(m_bl_gpio_pin, 1)
+            motor_servo_br.set_servo(m_br_pwm_pin, 0)
+            GPIO.output(m_br_gpio_pin, 1)
 
     def on_close(self):
         self._closed = True
@@ -184,18 +212,28 @@ if __name__ == '__main__':
     orientation_samples = 5
     polling_time = 0.1
 
-    m1pwm_pin = 18
-    m2pwm_pin = 24
-    m1gpio_pin = 17
-    m2gpio_pin = 23
+    m_fl_pwm_pin = 18
+    m_fl_gpio_pin = 17
+    m_fr_pwm_pin = 24
+    m_fr_gpio_pin = 23
+    m_bl_pwm_pin = 18
+    m_bl_gpio_pin = 17
+    m_br_pwm_pin = 24
+    m_br_gpio_pin = 23
 
-    motor_servo1 = PWM.Servo(0)
-    motor_servo2 = PWM.Servo(1)
-    motor_servo1.set_servo(m1pwm_pin, 0)
-    motor_servo2.set_servo(m2pwm_pin, 0)
+    motor_servo_fl = PWM.Servo(8)
+    motor_servo_fr = PWM.Servo(9)
+    motor_servo_bl = PWM.Servo(10)
+    motor_servo_br = PWM.Servo(11)
+    motor_servo_fl.set_servo(m_fl_pwm_pin, 0)
+    motor_servo_fr.set_servo(m_fr_pwm_pin, 0)
+    motor_servo_bl.set_servo(m_bl_pwm_pin, 0)
+    motor_servo_br.set_servo(m_br_pwm_pin, 0)
 
-    GPIO.setup(m1gpio_pin, GPIO.OUT, initial = GPIO.LOW)
-    GPIO.setup(m2gpio_pin, GPIO.OUT, initial = GPIO.LOW)
+    GPIO.setup(m_fl_gpio_pin, GPIO.OUT, initial = GPIO.LOW)
+    GPIO.setup(m_fr_gpio_pin, GPIO.OUT, initial = GPIO.LOW)
+    GPIO.setup(m_bl_gpio_pin, GPIO.OUT, initial = GPIO.LOW)
+    GPIO.setup(m_br_gpio_pin, GPIO.OUT, initial = GPIO.LOW)
 
     camera_servo1_pin = 27
     camera_servo2_pin = 22
@@ -210,8 +248,8 @@ if __name__ == '__main__':
     camera_servo2_min_angle = -35
     camera_servo2_max_angle = 90
 
-    camera_servo1 = PWM.Servo(2)
-    camera_servo2 = PWM.Servo(3)
+    camera_servo1 = PWM.Servo(12)
+    camera_servo2 = PWM.Servo(13)
     set_camera_servo1_position(0)
     set_camera_servo2_position(0)
 
