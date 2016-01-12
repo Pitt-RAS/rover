@@ -6,6 +6,7 @@ import RPIO as GPIO
 import RPIO.PWM as PWM
 
 import json
+import serial
 import time
 import threading
 
@@ -22,26 +23,7 @@ def set_camera_servo2_position(position):
     camera_servo2.set_servo(camera_servo2_pin, pulse)
 
 def cleanup():
-    motor_servo_fl.stop_servo(m_fl_pwm_pin)
-    motor_servo_fr.stop_servo(m_fr_pwm_pin)
-    motor_servo_bl.stop_servo(m_bl_pwm_pin)
-    motor_servo_br.stop_servo(m_br_pwm_pin)
     PWM.cleanup()
-
-    GPIO.setup(m_fl_pwm_pin, GPIO.OUT)
-    GPIO.setup(m_fr_pwm_pin, GPIO.OUT)
-    GPIO.setup(m_bl_pwm_pin, GPIO.OUT)
-    GPIO.setup(m_br_pwm_pin, GPIO.OUT)
-    GPIO.output(m_fl_pwm_pin, GPIO.LOW)
-    GPIO.output(m_fr_pwm_pin, GPIO.LOW)
-    GPIO.output(m_bl_pwm_pin, GPIO.LOW)
-    GPIO.output(m_br_pwm_pin, GPIO.LOW)
-
-    GPIO.output(m_fl_gpio_pin, GPIO.LOW)
-    GPIO.output(m_fr_gpio_pin, GPIO.LOW)
-    GPIO.output(m_bl_gpio_pin, GPIO.LOW)
-    GPIO.output(m_br_gpio_pin, GPIO.LOW)
-
     GPIO.cleanup()
 
     for thread in open_threads:
@@ -84,50 +66,30 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
             return
 
         if arrows['up']:
-            motor_servo_fl.set_servo(m_fl_pwm_pin, 19990)
-            GPIO.output(m_fl_gpio_pin, 0)
-            motor_servo_fr.set_servo(m_fr_pwm_pin, 19990)
-            GPIO.output(m_fr_gpio_pin, 0)
-            motor_servo_bl.set_servo(m_bl_pwm_pin, 19990)
-            GPIO.output(m_bl_gpio_pin, 0)
-            motor_servo_br.set_servo(m_br_pwm_pin, 19990)
-            GPIO.output(m_br_gpio_pin, 0)
+            arduino_serial.write('motor:fl:1\n')
+            arduino_serial.write('motor:fr:1\n')
+            arduino_serial.write('motor:bl:1\n')
+            arduino_serial.write('motor:br:1\n')
         elif arrows['down']:
-            motor_servo_fl.set_servo(m_fl_pwm_pin, 0)
-            GPIO.output(m_fl_gpio_pin, 1)
-            motor_servo_fr.set_servo(m_fr_pwm_pin, 0)
-            GPIO.output(m_fr_gpio_pin, 1)
-            motor_servo_bl.set_servo(m_bl_pwm_pin, 0)
-            GPIO.output(m_bl_gpio_pin, 1)
-            motor_servo_br.set_servo(m_br_pwm_pin, 0)
-            GPIO.output(m_br_gpio_pin, 1)
+            arduino_serial.write('motor:fl:-1\n')
+            arduino_serial.write('motor:fr:-1\n')
+            arduino_serial.write('motor:bl:-1\n')
+            arduino_serial.write('motor:br:-1\n')
         elif arrows['left']:
-            motor_servo_fl.set_servo(m_fl_pwm_pin, 0)
-            GPIO.output(m_fl_gpio_pin, 1)
-            motor_servo_fr.set_servo(m_fr_pwm_pin, 19990)
-            GPIO.output(m_fr_gpio_pin, 0)
-            motor_servo_bl.set_servo(m_bl_pwm_pin, 0)
-            GPIO.output(m_bl_gpio_pin, 1)
-            motor_servo_br.set_servo(m_br_pwm_pin, 19990)
-            GPIO.output(m_br_gpio_pin, 0)
+            arduino_serial.write('motor:fl:-1\n')
+            arduino_serial.write('motor:fr:1\n')
+            arduino_serial.write('motor:bl:-1\n')
+            arduino_serial.write('motor:br:1\n')
         elif arrows['right']:
-            motor_servo_fl.set_servo(m_fl_pwm_pin, 19990)
-            GPIO.output(m_fl_gpio_pin, 0)
-            motor_servo_fr.set_servo(m_fr_pwm_pin, 0)
-            GPIO.output(m_fr_gpio_pin, 1)
-            motor_servo_bl.set_servo(m_bl_pwm_pin, 19990)
-            GPIO.output(m_bl_gpio_pin, 0)
-            motor_servo_br.set_servo(m_br_pwm_pin, 0)
-            GPIO.output(m_br_gpio_pin, 1)
+            arduino_serial.write('motor:fl:1\n')
+            arduino_serial.write('motor:fr:-1\n')
+            arduino_serial.write('motor:bl:1\n')
+            arduino_serial.write('motor:br:-1\n')
         else:
-            motor_servo_fl.set_servo(m_fl_pwm_pin, 0)
-            GPIO.output(m_fl_gpio_pin, 1)
-            motor_servo_fr.set_servo(m_fr_pwm_pin, 0)
-            GPIO.output(m_fr_gpio_pin, 1)
-            motor_servo_bl.set_servo(m_bl_pwm_pin, 0)
-            GPIO.output(m_bl_gpio_pin, 1)
-            motor_servo_br.set_servo(m_br_pwm_pin, 0)
-            GPIO.output(m_br_gpio_pin, 1)
+            arduino_serial.write('motor:fl:0\n')
+            arduino_serial.write('motor:fr:0\n')
+            arduino_serial.write('motor:bl:0\n')
+            arduino_serial.write('motor:br:0\n')
 
     def on_close(self):
         self._closed = True
@@ -212,28 +174,30 @@ if __name__ == '__main__':
     orientation_samples = 5
     polling_time = 0.1
 
-    m_fl_pwm_pin = 18
-    m_fl_gpio_pin = 17
-    m_fr_pwm_pin = 24
-    m_fr_gpio_pin = 23
-    m_bl_pwm_pin = 18
-    m_bl_gpio_pin = 17
-    m_br_pwm_pin = 24
-    m_br_gpio_pin = 23
+    # m_fl_pwm_pin = 18
+    # m_fl_gpio_pin = 17
+    # m_fr_pwm_pin = 24
+    # m_fr_gpio_pin = 23
+    # m_bl_pwm_pin = 18
+    # m_bl_gpio_pin = 17
+    # m_br_pwm_pin = 24
+    # m_br_gpio_pin = 23
 
-    motor_servo_fl = PWM.Servo(8)
-    motor_servo_fr = PWM.Servo(9)
-    motor_servo_bl = PWM.Servo(10)
-    motor_servo_br = PWM.Servo(11)
-    motor_servo_fl.set_servo(m_fl_pwm_pin, 0)
-    motor_servo_fr.set_servo(m_fr_pwm_pin, 0)
-    motor_servo_bl.set_servo(m_bl_pwm_pin, 0)
-    motor_servo_br.set_servo(m_br_pwm_pin, 0)
+    # motor_servo_fl = PWM.Servo(8)
+    # motor_servo_fr = PWM.Servo(9)
+    # motor_servo_bl = PWM.Servo(10)
+    # motor_servo_br = PWM.Servo(11)
+    # motor_servo_fl.set_servo(m_fl_pwm_pin, 0)
+    # motor_servo_fr.set_servo(m_fr_pwm_pin, 0)
+    # motor_servo_bl.set_servo(m_bl_pwm_pin, 0)
+    # motor_servo_br.set_servo(m_br_pwm_pin, 0)
 
-    GPIO.setup(m_fl_gpio_pin, GPIO.OUT, initial = GPIO.LOW)
-    GPIO.setup(m_fr_gpio_pin, GPIO.OUT, initial = GPIO.LOW)
-    GPIO.setup(m_bl_gpio_pin, GPIO.OUT, initial = GPIO.LOW)
-    GPIO.setup(m_br_gpio_pin, GPIO.OUT, initial = GPIO.LOW)
+    # GPIO.setup(m_fl_gpio_pin, GPIO.OUT, initial = GPIO.LOW)
+    # GPIO.setup(m_fr_gpio_pin, GPIO.OUT, initial = GPIO.LOW)
+    # GPIO.setup(m_bl_gpio_pin, GPIO.OUT, initial = GPIO.LOW)
+    # GPIO.setup(m_br_gpio_pin, GPIO.OUT, initial = GPIO.LOW)
+
+    arduino_serial = serial.Serial('/dev/tty.usbserial', 115200);
 
     camera_servo1_pin = 27
     camera_servo2_pin = 22
