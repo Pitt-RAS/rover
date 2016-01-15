@@ -14,7 +14,6 @@
 char inputBuffer[INPUT_BUFFER_SIZE];
 byte inputBufferSize = 0;
 
-// Cut down on some conditionals by picking from an array
 const byte[] motorPins = {
   MOTOR_FL_PWM_PIN, MOTOR_FR_PWM_PIN, MOTOR_BL_PWM_PIN, MOTOR_BR_PWM_PIN,
   MOTOR_FL_GPIO_PIN, MOTOR_FR_GPIO_PIN, MOTOR_BL_GPIO_PIN, MOTOR_BR_GPIO_PIN
@@ -36,10 +35,11 @@ void setup(){
 void loop(){
   byte newChars = Serial.readBytesUntil('\n', inputBuffer + inputBufferSize, sizeof(inputBuffer) - inputBufferSize);
   inputBufferSize += newChars;
-  if (inputBufferSize > 0 && inputBffer[inputBufferSize - 1] == '\n'){
+  if (inputBufferSize > 0 && inputBuffer[inputBufferSize - 1] == '\n'){
     // Split the command, clear the buffer
     char[][] command = splitString(inputBuffer,',');
-    inputBuffer = new char[INPUT_BUFFER_SIZE];
+    inputBufferSize = 0;
+    inputBuffer = {};
     // Process the command
     processCommand(command);
   }
