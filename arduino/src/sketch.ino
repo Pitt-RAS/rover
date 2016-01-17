@@ -4,7 +4,7 @@
 //----------------------------------------------------------------------------
 // Each command is a 10-character word sent over from the pi.
 // 0 = char : Function command (m for Motor)
-// 1 = char : Parameter 1 (f or b for front or back)
+// 1 = char : Parameter 1 (f or b for front or back) 
 // 2 = char : Parameter 2 (l or r for left or right)
 // 3-9 = float as string : Paramter 3 (motor speed)
 // A few commands may use Parameters 1 and 2 together in different ways,
@@ -108,7 +108,8 @@ void setup(){
   // Set the pin mode for each motor pin, and mark it for future reference
   for (int k = 0; k < 8; k++){
     pinModes[motorPins[k]] = OUTPUT + 1;
-    pinMode(motorPins[k], OUTPUT);
+    Serial.print("Can we even get inside the setup?");  
+  pinMode(motorPins[k], OUTPUT);
   }
 }
 
@@ -121,12 +122,14 @@ void loop(){
   inputBufferSize += newChars;
   while (inputBufferSize > 10 && inputBuffer[inputBufferSize - 1] == COMMAND_SEPERATOR && commandsSize < COMMAND_BUFFER_SIZE){
     // Add to be executed
+    Serial.print("Reached the point where commands can actually be parsed (memcpy(commands[commandsSize] etc.))");
     memcpy(commands[commandsSize], &inputBuffer[inputBufferSize - 11], 10);
-    inputBufferSize -= 11;
+    inputBufferSize -= 11; // Removes 10 characters + separator
     commandsSize++;
   }
   // Execute the commands FIFO.
   if (commandsSize > 0){
+    Serial.print("We have now started executing the commands FIFO.");
     for (int k = commandsSize - 1; k >= 0; k--){
       char args[] = {commands[k][1],commands[k][2]};
       processCommand(commands[k][0], atof(commands[k] + 3), args);
@@ -135,6 +138,7 @@ void loop(){
   }
   // Do some clean-up here if too much stuff
   if (inputBufferSize >= INPUT_BUFFER_SIZE * 0.5){
+     Serial.print("Now we're cleaning things up because there's too much stuff. ");
      for (int k = inputBufferSize; k > 0; k--){
        if (inputBuffer[k] != COMMAND_SEPERATOR){
          inputBuffer[k] = 0;
