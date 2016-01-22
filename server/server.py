@@ -60,36 +60,39 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
         new_thread.start()
 
     def on_message(self, message):
-        # print 'Keys:', message
+        print 'Keys:', message
         arrows = json.loads(message)
         if not (arrows.has_key('up') and arrows.has_key('down') and arrows.has_key('left') and arrows.has_key('right')):
             return
 
         if arrows['up']:
-            arduino_serial.write('motor:fl:1\n')
-            arduino_serial.write('motor:fr:1\n')
-            arduino_serial.write('motor:bl:1\n')
-            arduino_serial.write('motor:br:1\n')
+            arduino_serial.write('mfl1.00000:')
+            arduino_serial.write('mfr1.00000:')
+            arduino_serial.write('mbl1.00000:')
+            arduino_serial.write('mbr1.00000:\n')
         elif arrows['down']:
-            arduino_serial.write('motor:fl:-1\n')
-            arduino_serial.write('motor:fr:-1\n')
-            arduino_serial.write('motor:bl:-1\n')
-            arduino_serial.write('motor:br:-1\n')
+            arduino_serial.write('mfl-1.0000:')
+            arduino_serial.write('mfr-1.0000:')
+            arduino_serial.write('mbl-1.0000:')
+            arduino_serial.write('mbr-1.0000:\n')
         elif arrows['left']:
-            arduino_serial.write('motor:fl:-1\n')
-            arduino_serial.write('motor:fr:1\n')
-            arduino_serial.write('motor:bl:-1\n')
-            arduino_serial.write('motor:br:1\n')
+            arduino_serial.write('mfl-1.0000:')
+            arduino_serial.write('mfr1.00000:')
+            arduino_serial.write('mbl-1.0000:')
+            arduino_serial.write('mbr1.00000:\n')
         elif arrows['right']:
-            arduino_serial.write('motor:fl:1\n')
-            arduino_serial.write('motor:fr:-1\n')
-            arduino_serial.write('motor:bl:1\n')
-            arduino_serial.write('motor:br:-1\n')
+            arduino_serial.write('mfl1.00000:')
+            arduino_serial.write('mfr-1.0000:')
+            arduino_serial.write('mbl1.00000:')
+            arduino_serial.write('mbr-1.0000:\n')
         else:
-            arduino_serial.write('motor:fl:0\n')
-            arduino_serial.write('motor:fr:0\n')
-            arduino_serial.write('motor:bl:0\n')
-            arduino_serial.write('motor:br:0\n')
+            arduino_serial.write('mfl0000000:')
+            arduino_serial.write('mfr0000000:')
+            arduino_serial.write('mbl0000000:')
+            arduino_serial.write('mbr0000000:\n')
+
+    def check_origin(self, origin):
+        return True
 
     def on_close(self):
         self._closed = True
@@ -197,7 +200,7 @@ if __name__ == '__main__':
     # GPIO.setup(m_bl_gpio_pin, GPIO.OUT, initial = GPIO.LOW)
     # GPIO.setup(m_br_gpio_pin, GPIO.OUT, initial = GPIO.LOW)
 
-    arduino_serial = serial.Serial('/dev/tty.usbserial', 115200);
+    arduino_serial = serial.Serial('/dev/ttyUSB0', 115200);
 
     camera_servo1_pin = 27
     camera_servo2_pin = 22
