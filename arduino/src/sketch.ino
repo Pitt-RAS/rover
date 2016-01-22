@@ -3,13 +3,13 @@ char buf[200];
 int chars_in_buf = 0;
 
 int motor_fl_pwm_pin = 5;
-int motor_fr_pwm_pin = 6;
+int motor_fr_pwm_pin = 11;
 int motor_bl_pwm_pin = 9;
 int motor_br_pwm_pin = 10;
 int motor_fl_gpio_pin = 2;
 int motor_fr_gpio_pin = 3;
 int motor_bl_gpio_pin = 4;
-int motor_br_gpio_pin = 7;
+int motor_br_gpio_pin = 8;
 
 void setup()
 {
