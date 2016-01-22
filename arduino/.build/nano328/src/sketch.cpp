@@ -1,3 +1,9 @@
+#include <Arduino.h>
+
+void setup();
+void loop();
+void write_motor_speed(float speed, int pwm_pin, int gpio_pin);
+#line 1 "src/sketch.ino"
 
 char buf[200];
 int chars_in_buf = 0;
