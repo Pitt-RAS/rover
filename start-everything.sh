@@ -1,9 +1,9 @@
-cd ~pi/ras-rover/mjpg-streamer
+cd "$(dirname "$0")"
+cd mjpg-streamer
 ./mjpg-streamer.sh stop
 ./mjpg-streamer.sh start
-cd ..
 
+cd ..
 cd server
 python server.py
-cd ..
 
