@@ -1,0 +1,2 @@
+#ignore arduino intermediate build files
+arduino/.build
