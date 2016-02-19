@@ -12,61 +12,104 @@ import threading
 
 from collections import deque
 
-def set_camera_servo1_position(position):
-	pulse = camera_servo1_min_pulse + float(camera_servo1_max_pulse - camera_servo1_min_pulse) * (position - camera_servo1_min_angle) / (camera_servo1_max_angle - camera_servo1_min_angle)
-	pulse = (pulse//10)*10
-	camera_servo1.set_servo(camera_servo1_pin, pulse)
-	
-def set_camera_servo2_position(position):
-	pulse = camera_servo2_min_pulse + float(camera_servo2_max_pulse - camera_servo2_min_pulse) * (position - camera_servo2_min_angle) / (camera_servo2_max_angle - camera_servo2_min_angle)
-	pulse = (pulse//10)*10
-	camera_servo2.set_servo(camera_servo2_pin, pulse)
+# Threads currently open in this application
+open_threads = []
 
+#-----------------------------------------------------
+# set_camera_servo_position
+# Sets the camera servo to a specified angle
+#-----------------------------------------------------
+def set_camera_servo_position(servo, position):
+	pulse = camera_servo_pulse[servo] + float(camera_servo_pulse[servo+2] - camera_servo_pulse[servo]) * (position - camera_servo_angle[servo]) / (camera_servo_angle[servo+1] - camera_servo_angle[servo])
+	pulse = (pulse//10)*10
+	camera_servo1.set_servo(camera_servo_pins[servo], pulse)
+
+#-----------------------------------------------------
+# cleanup
+# Shut everything down
+#-----------------------------------------------------
 def cleanup():
 	PWM.cleanup()
 	GPIO.cleanup()
-
 	for thread in open_threads:
 		thread.stop()
 		thread.join()
 
+#-----------------------------------------------------
+# poll
+# Poll the stopable thread
+#-----------------------------------------------------
+def poll(ws):
+	while True:
+		# Can't do anything if the websocket closed or the thread
+		# has already been stopped
+		if ws._closed or threading.current_thread().stopped():
+			break
+		#ws.write_message(u'send_input')
+		time.sleep(polling_time)
+	# Thread is dead, remove
+	open_threads.remove(threading.current_thread())
+
+#=========================================================
+# StoppableThread
+#---------------------------------------------------------
+# The thread kept alive in the background
+#=========================================================
 class StoppableThread(threading.Thread):
+
+	#-----------------------------------------------------
+	# __init__
+	# Start a new stoppable thread
+	#-----------------------------------------------------
 	def __init__(self, *args, **kwargs):
 		super(StoppableThread, self).__init__(*args, **kwargs)
 		self._stop = threading.Event()
 
+	#-----------------------------------------------------
+	# stop
+	# Stop the thread
+	#-----------------------------------------------------
 	def stop(self):
 		self._stop.set()
 
+	#-----------------------------------------------------
+	# stopped
+	# Check if the thread is stopped
+	#-----------------------------------------------------
 	def stopped(self):
 		return self._stop.isSet()
 
-def poll(ws):
-	while True:
-		if ws._closed or threading.current_thread().stopped():
-			break
-		ws.write_message(u'send_input')
-		time.sleep(polling_time)
-	open_threads.remove(threading.current_thread())
-
-open_threads = []
-
+#=========================================================
+# KeyPressHandler
+#---------------------------------------------------------
+# Handles all of the input from the web app
+#=========================================================
 class KeyPressHandler(tornado.websocket.WebSocketHandler):
 
-	throttle = 1.0
+	throttle = 1.0	# The speed multiplier for the entire robot's motors
 
+	#-----------------------------------------------------
+	# open
+	# Opens the websocket, connecting to the app
+	#-----------------------------------------------------
 	def open(self):
 		self._closed = False
-		print 'opened socket'
+		print('Websocket Opened')
 		new_thread = StoppableThread(target = poll, args = (self,))
 		open_threads.append(new_thread)
 		new_thread.start()
 
+	#-----------------------------------------------------
+	# on_message
+	# Handles input from the app
+	#-----------------------------------------------------
 	def on_message(self, message):
 		msg = json.loads(message)
-		# Arrow keys are sent in a binary format:
-		# 1 - Up, 2 - Down, 4 - Left, 8 - Right
+		
+		# Arrow key input for motors
 		if (msg.has_key('Keys')):
+			# Arrow keys are sent in a binary format:
+			# 1 - Up, 2 - Down, 4 - Left, 8 - Right
 			arrows = msg['Keys']
 			dir = [arrows & 1, (arrows & 2) >> 1, (arrows & 4) >> 2, (arrows & 8) >> 3]
 			wheels = [-dir[0]+dir[1]+dir[2]-dir[3],dir[0]-dir[1]+dir[2]-dir[3]]
@@ -76,140 +119,53 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
 			w1 = '%.7f'% (wheels[1]*self.throttle)
 			mal = 'mal'+w0[:7]+':'
 			mar = 'mar'+w1[:7]+':'
-			print mal
+			# Write the values to the arduino
 			arduino_serial.write(mal)
 			arduino_serial.write(mar+'\n')
+			
+		# Slider used to adjust throttle for all motors
 		if (msg.has_key('Thr')):
 			self.throttle = msg['Thr'] / 256.0
 
+	#-----------------------------------------------------
+	# check_origin
+	# Set to true to allow all cross-origin traffic
+	#-----------------------------------------------------
 	def check_origin(self, origin):
 		return True
 
+	#-----------------------------------------------------
+	# on_close
+	# Close the socket (ignore errors)
+	#-----------------------------------------------------
 	def on_close(self):
 		self._closed = True
-
-primary_phone_socket = None
-class PhoneSocketHandler(tornado.websocket.WebSocketHandler):
-	def open(self):
-		self._closed = False
-		print 'opened socket'
-		new_thread = StoppableThread(target = poll, args = (self,))
-		open_threads.append(new_thread)
-		new_thread.start()
-
-		self.zero_heading = -1
-
-		self.target_heading_array = deque()
-		self.target_pitch_array = deque()
-
-		global primary_phone_socket
-		if not primary_phone_socket:
-			primary_phone_socket = self
-
-	def on_message(self, message):
-		global primary_phone_socket
-		if self != primary_phone_socket:
-			return
-
-		# print 'Orientation:', message
-		orientation = json.loads(message)
-		if not (orientation.has_key('absolute') and orientation.has_key('alpha') and orientation.has_key('beta') and orientation.has_key('gamma')):
-			return
-
-		if orientation['gamma'] > 0:
-			orientation['alpha'] = (orientation['alpha'] + 180)%360
-
-		if self.zero_heading == -1:
-			self.zero_heading = orientation['alpha']
-
-		new_target_heading = orientation['alpha'] - self.zero_heading
-
-		# change the heading range to [-180, 180]
-		if new_target_heading > 180:
-			new_target_heading -= 360
-		if new_target_heading < -180:
-			new_target_heading += 360
-
-		new_target_heading = new_target_heading if new_target_heading >= camera_servo1_min_angle else camera_servo1_min_angle
-		new_target_heading = new_target_heading if new_target_heading <= camera_servo1_max_angle else camera_servo1_max_angle
-
-		self.target_heading_array.append(new_target_heading)
-		while len(self.target_heading_array) > orientation_samples:
-			self.target_heading_array.popleft()
-
-		set_camera_servo1_position(sum(self.target_heading_array) / len(self.target_heading_array))
-
-		if orientation['gamma'] > 0:
-			new_target_pitch = 90 - orientation['gamma']
-		else:
-			new_target_pitch = -90 - orientation['gamma']
-		new_target_pitch = new_target_pitch if new_target_pitch >= camera_servo2_min_angle else camera_servo2_min_angle
-		new_target_pitch = new_target_pitch if new_target_pitch <= camera_servo2_max_angle else camera_servo2_max_angle
-
-		self.target_pitch_array.append(new_target_pitch)
-		while len(self.target_pitch_array) > orientation_samples:
-			self.target_pitch_array.popleft()
-
-		set_camera_servo2_position(sum(self.target_pitch_array) / len(self.target_pitch_array))
-
-	def on_close(self):
-		self._closed = True
-
-		global primary_phone_socket
-		primary_phone_socket = None
-
+		
+#-----------------------------------------------------
+# Program starts here
+#-----------------------------------------------------
 if __name__ == '__main__':
+	# Start the websocket
 	application = tornado.web.Application([
 		(r'/keysocket', KeyPressHandler),
-		(r'/phonesocket', PhoneSocketHandler),
 		(r'/(.*)', tornado.web.StaticFileHandler, { 'path': './www', 'default_filename': 'index.html' })
 	])
-
-	orientation_samples = 5
-	polling_time = 0.1
-
-	# m_fl_pwm_pin = 18
-	# m_fl_gpio_pin = 17
-	# m_fr_pwm_pin = 24
-	# m_fr_gpio_pin = 23
-	# m_bl_pwm_pin = 18
-	# m_bl_gpio_pin = 17
-	# m_br_pwm_pin = 24
-	# m_br_gpio_pin = 23
-
-	# motor_servo_fl = PWM.Servo(8)
-	# motor_servo_fr = PWM.Servo(9)
-	# motor_servo_bl = PWM.Servo(10)
-	# motor_servo_br = PWM.Servo(11)
-	# motor_servo_fl.set_servo(m_fl_pwm_pin, 0)
-	# motor_servo_fr.set_servo(m_fr_pwm_pin, 0)
-	# motor_servo_bl.set_servo(m_bl_pwm_pin, 0)
-	# motor_servo_br.set_servo(m_br_pwm_pin, 0)
-
-	# GPIO.setup(m_fl_gpio_pin, GPIO.OUT, initial = GPIO.LOW)
-	# GPIO.setup(m_fr_gpio_pin, GPIO.OUT, initial = GPIO.LOW)
-	# GPIO.setup(m_bl_gpio_pin, GPIO.OUT, initial = GPIO.LOW)
-	# GPIO.setup(m_br_gpio_pin, GPIO.OUT, initial = GPIO.LOW)
-
+	# Set up connection to Arduino on the USB port
 	arduino_serial = serial.Serial('/dev/ttyUSB0', 115200);
-
-	camera_servo1_pin = 27
-	camera_servo2_pin = 22
-
-	camera_servo1_min_pulse = 18950
-	camera_servo1_max_pulse = 19650
-	camera_servo2_min_pulse = 18740
-	camera_servo2_max_pulse = 19370
-
-	camera_servo1_min_angle = -75
-	camera_servo1_max_angle = 75
-	camera_servo2_min_angle = -35
-	camera_servo2_max_angle = 90
+	# Time in between thread polling
+	polling_time = 0.1
+	# Pins that the camera uses
+	camera_servo_pins = [27,22]
+	# Camera Servo Pulse = [min1, min2, max1, max2]
+	camera_servo_pulse = [18950,18740,19650,19370]
+	# Camera Servo Angle = [min1, min2, max1, max2]
+	camera_servo_angle = [-75, -35, 75, 90]
 
 	camera_servo1 = PWM.Servo(12)
 	camera_servo2 = PWM.Servo(13)
-	set_camera_servo1_position(0)
-	set_camera_servo2_position(0)
+	# Set camera servos 0 and 1 to 0
+	set_camera_servo_position(0,0)
+	set_camera_servo_position(1,0)
 
 	application.listen(80)
 	try:
