@@ -5,12 +5,14 @@ var ip = $('#ip-addr').on('keyup', function(){
       });
 
 var direction = 0;
+var keys = [false, false, false, false];
 
 //changes ip adresses when text field changes
 //
 //
 
-document.onkeydown = checkKey;
+document.onkeydown = setKeyDown;
+document.onkeyup = setKeyUp;
 
 function check() {
 
@@ -24,35 +26,40 @@ function reset() {
 direction = 0;
 }
 
-
-function checkKey(e) {
-
+//---------------------------------------------
+// setKeyDown
+// Set the arrow key as down
+//---------------------------------------------
+function setKeyDown(e) {
     e = e || window.event;
-
-    if (e.keyCode == '38') {
-        // up arrow
-        direction += 1;
-        console.log("up");
+    if (e.keyCode >= 37 || e.keyCode <= 40) {
+		keys[e.keyCode - 37] = true;
     }
-    if (e.keyCode == '40') {
-        // down arrow
-        direction += 2;
-        console.log("down");
-    }
-    if (e.keyCode == '37') {
-       // left arrow
-        direction += 4;
-        console.log("left");
-    }
-    if (e.keyCode == '39') {
-       // right arrow
-        direction += 8;
-        console.log("right");
-    }
+	sendData();
+}
 
-console.log("keys:" + JSON.stringify(direction));
+//---------------------------------------------
+// setKeyDown
+// Set the arrow key as up
+//---------------------------------------------
+function setKeyUp(e) {
+    e = e || window.event;
+    if (e.keyCode >= 37 || e.keyCode <= 40) {
+		keys[e.keyCode - 37] = false;
+    }
+	sendData();
+}
 
-webSock.send("keys:" + JSON.stringify(direction));
-
-direction = 0;
+//---------------------------------------------
+// sendData
+// Send the key data over the websocket
+//---------------------------------------------
+function sendData(){
+	direction = 0;
+	if (keys[0]){direction += 4;} // Left
+	if (keys[1]){direction += 1;} // Up
+	if (keys[2]){direction += 8;} // Right
+	if (keys[3]){direction += 2;} // Down
+	console.log("keys:" + direction.toString());
+	webSock.send("keys:" + direction.toString());
 }
