@@ -1,0 +1,20 @@
+.interface-title{
+        text-align: center;
+        width: 50%;
+        margin: 5 auto;
+}
+
+.interface-center {
+        padding: 5% 0 5% 0;
+        width: 50%;
+        margin: 0 auto;
+}
+
+input, select, textarea{
+        padding: 5px 0 5px 0;
+    color: #000000;
+}
+
+textarea:focus, input:focus {
+    color: #000000;
+}
