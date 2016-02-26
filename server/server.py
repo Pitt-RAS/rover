@@ -19,10 +19,10 @@ open_threads = []
 # set_camera_servo_position
 # Sets the camera servo to a specified angle
 #-----------------------------------------------------
-def set_camera_servo_position(servo, position):
-	pulse = camera_servo_pulse[servo] + float(camera_servo_pulse[servo+2] - camera_servo_pulse[servo]) * (position - camera_servo_angle[servo]) / (camera_servo_angle[servo+1] - camera_servo_angle[servo])
-	pulse = (pulse//10)*10
-	camera_servo1.set_servo(camera_servo_pins[servo], pulse)
+#def set_camera_servo_position(servo, position):
+	#pulse = camera_servo_pulse[servo] + float(camera_servo_pulse[servo+2] - camera_servo_pulse[servo]) * (position - camera_servo_angle[servo]) / (camera_servo_angle[servo+1] - camera_servo_angle[servo])
+	#pulse = (pulse//10)*10
+	#camera_servo1.set_servo(camera_servo_pins[servo], pulse)
 
 #-----------------------------------------------------
 # cleanup
@@ -122,7 +122,7 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
 			# Write the values to the arduino
 			arduino_serial.write(mal)
 			arduino_serial.write(mar+'\n')
-			
+					
 		# Slider used to adjust throttle for all motors
 		if (msg.has_key('Thr')):
 			self.throttle = msg['Thr'] / 256.0
@@ -151,7 +151,7 @@ if __name__ == '__main__':
 		(r'/(.*)', tornado.web.StaticFileHandler, { 'path': './www', 'default_filename': 'index.html' })
 	])
 	# Set up connection to Arduino on the USB port
-	arduino_serial = serial.Serial('/dev/ttyUSB0', 115200);
+	arduino_serial = serial.Serial('/dev/ttyAMA0', 115200);
 	# Time in between thread polling
 	polling_time = 0.1
 	# Pins that the camera uses
@@ -164,8 +164,8 @@ if __name__ == '__main__':
 	camera_servo1 = PWM.Servo(12)
 	camera_servo2 = PWM.Servo(13)
 	# Set camera servos 0 and 1 to 0
-	set_camera_servo_position(0,0)
-	set_camera_servo_position(1,0)
+	#set_camera_servo_position(0,0)
+	#set_camera_servo_position(1,0)
 
 	application.listen(80)
 	try:

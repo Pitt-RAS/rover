@@ -60,6 +60,7 @@ function sendData(){
 	if (keys[1]){direction += 1;} // Up
 	if (keys[2]){direction += 8;} // Right
 	if (keys[3]){direction += 2;} // Down
-	console.log("keys:" + direction.toString());
-	webSock.send("keys:" + direction.toString());
+	var toSend = "{\"Keys\":"+direction.toString()+"}";
+	console.log(toSend);
+	webSock.send(toSend);
 }
