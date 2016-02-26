@@ -1,6 +1,7 @@
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
+from tornado.websocket import websocket_connect
 
 import RPIO as GPIO
 import RPIO.PWM as PWM
@@ -141,6 +142,14 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
 	def on_close(self):
 		self._closed = True
 		
+def data_received(message):
+	if message != None:
+		print("Message received: " + message)
+		#Need to handle message, cannot handle hardware IO here as another incoming data piece will destroy this one and cause exceptions if it does not finish quickly
+		#It will require another thread to handle the stream of input data
+	else:
+		print("Connection was closed")
+	
 #-----------------------------------------------------
 # Program starts here
 #-----------------------------------------------------
@@ -166,6 +175,9 @@ if __name__ == '__main__':
 	# Set camera servos 0 and 1 to 0
 	#set_camera_servo_position(0,0)
 	#set_camera_servo_position(1,0)
+
+
+	conn = websocket_connect('ws://aftersomemath.com:8888/rover', on_message_callback = data_received)
 
 	application.listen(80)
 	try:
