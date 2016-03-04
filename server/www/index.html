@@ -1,70 +1,79 @@
 <!DOCTYPE html>
-<html>
-<head>
-<script>
-var ws_keys = new WebSocket('ws://192.168.1.5/keysocket');
-ws_keys.onmessage = function(e) {
-    console.log(e.data);
-    if (e.data == 'send_input') {
-        ws_keys.send(JSON.stringify(keys));
-    }
-};
+<html lang="en"><head>
+                <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+                <meta charset="utf-8">
+                <meta http-equiv="X-UA-Compatible" content="IE=edge">
+                <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+                <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+                <meta name="description" content="">
+                <meta name="author" content="">
+                <link rel="icon" href="http://v4-alpha.getbootstrap.com/favicon.ico">
 
-var ws_orientation = new WebSocket('ws://192.168.1.5/phonesocket');
-ws_orientation.onmessage = function(e) {
-    console.log(e.data);
-    if (e.data == 'send_input') {
-        ws_orientation.send(JSON.stringify(keys));
-    }
-};
+                <title>Autonomous Rover</title>
 
-var keycodes = {
-    '37': 'left',
-    '38': 'up',
-    '39': 'right',
-    '40': 'down'
-};
+                <!-- Bootstrap core CSS -->
+                <link href="index_files/bootstrap.css" rel="stylesheet">
 
-var keys = {
-    'up': false,
-    'down': false,
-    'left': false,
-    'right': false
-};
+                <!-- Custom styles for this template -->
+                <link href="index_files/jumbotron.css" rel="stylesheet">
 
-var odata = {
-    'absolute': -1,
-    'alpha': -1,
-    'beta': -1,
-    'gamma': -1
-};
+                <!-- interface style sheet -->
+                <link href="css/interface.css" rel="stylesheet">
 
-function init() {
-    window.addEventListener('deviceorientation', function(e) {
-        odata.absolute = e.absolute;
-        odata.alpha = e.alpha;
-        odata.beta = e.beta;
-        odata.gamma = e.gamma;
-    });
-    document.addEventListener('keydown', function(e) {
-        keys[keycodes[''+e.keyCode]] = true;
-    });
-    document.addEventListener('keyup', function(e) {
-        keys[keycodes[''+e.keyCode]] = false;
-    });
-}
-</script>
-</head>
-<body onload="init()">
-    <table>
-        <tr>
-            <td>
-                <img src="192.168.1.5:8090/?action=stream" />
-            </td>
-            <td>
-                <img src="192.168.1.5:8090/?action=stream" />
-            </td>
-        </tr>
-    </table>
-</body>
-</html>
+                <style>.carbonad,
+#content > #right > .dose > .dosesingle,
+#content > #center > .dose > .dosesingle,
+#carbonads-container
+{display:none !important;}</style></head>
+
+                <body linkifymax="0" linkifycurrent="0" linkifying="true">
+
+                        <nav class="navbar navbar-static-top navbar-dark bg-inverse">
+                                <a class="navbar-brand">Autonomous Rover</a>
+                                <ul class="nav navbar-nav">
+                                        </li>
+                                        <li class="nav-item">
+                                                <!-- text box to enter ip address -->
+                                                <a class="navbar-brand">ip address:</a><input type="text" placeholder="xxx.xxx.xxx.xxx" id="ip-addr"/>
+                                        </li>
+                                </ul>
+                        </nav>
+
+
+                        <!-- Table container for video streams -->
+                        <span id="ip">ip address</span>
+                        <div class="interface-center">
+                        <table>
+                                <tr>
+                                        <td>
+                                                <img src="http://192.168.1.5:8080/?action=stream">
+                                        </td>
+                                        <td>
+                                                <img src="http://192.168.1.5:8080/?action=stream">
+                                        </td>
+
+
+                                </tr>
+                        </table>
+                        </div>
+
+                        <hr>
+
+                        <footer>
+                                <p>Robotics and Automation Society 2016</p>
+                        </footer>
+                        </div> <!-- /container -->
+
+
+                        <!-- Bootstrap core JavaScript
+                                ================================================== -->
+                                <!-- Placed at the end of the document so the pages load faster -->
+                                <script src="index_files/jquery.js"></script>
+                                <script src="js/interface.js"></script>
+                                <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')</script>
+                                <script src="index_files/bootstrap.js"></script>
+                                <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+                                <script src="index_files/ie10-viewport-bug-workaround.js"></script>
+
+
+                </body></html>
