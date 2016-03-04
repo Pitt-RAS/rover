@@ -54,11 +54,11 @@
 //----------------------------------------------------------------------------
 
 // How many characters should be back-logged for the input buffer
-#define INPUT_BUFFER_SIZE 200
-// How many commands can be stored for execution at once
-#define COMMAND_BUFFER_SIZE 25
-// The character that seperates individual commands
-#define COMMAND_SEPERATOR ':'
+#define INPUT_BUFFER_SIZE 10
+// The character that separates individual commands
+#define COMMAND_SEPARATOR ':'
+// The number of bytes in a command
+#define COMMAND_SIZE 7
 // If a pin was previously used for OUTPUT, it cannot be swapped to INPUT and reverse
 #define STRICT_PINS true
 
@@ -73,8 +73,9 @@
 #define MOTOR_BR_GPIO_PIN 8
 
 // Buffer for serial input
-char inputBuffer[INPUT_BUFFER_SIZE];
-byte inputBufferSize = 0;
+byte input_buffer[INPUT_BUFFER_SIZE];
+int input_buffer_size = 0;
+int input_buffer_head = 0;
 // Keep track if pins are set to INPUT or OUTPUT
 byte pinModes[30];
 // The last error raised
@@ -85,28 +86,25 @@ int toneDuration = 0;
 // Which pin is playing a tone
 byte tonePin = 0;
 
-// The commands to be executed
-char commands[COMMAND_BUFFER_SIZE][10];
-byte commandsSize = 0;
-
 // Cut down on some conditionals by picking from an array
 byte motorPins[] = {
   MOTOR_FL_PWM_PIN, MOTOR_FR_PWM_PIN, MOTOR_BL_PWM_PIN, MOTOR_BR_PWM_PIN,
   MOTOR_FL_GPIO_PIN, MOTOR_FR_GPIO_PIN, MOTOR_BL_GPIO_PIN, MOTOR_BR_GPIO_PIN
 };
+
 // Analog pins, for easy access in getPin
-byte aPins[] = {A0,A1,A2,A3,A4,A5,A6,A7};
+byte aPins[] = {A0, A1 ,A2, A3, A4, A5, A6, A7};
 
 //----------------------------------------------------------------------------
 // setup
 // Runs once when the program starts
 //----------------------------------------------------------------------------
-void setup(){
+void setup() {
   // Start Serial
   Serial.begin(115200);
-  Serial.setTimeout(10);
+
   // Set the pin mode for each motor pin, and mark it for future reference
-  for (int k = 0; k < 8; k++){
+  for (int k = 0; k < 8; k++) {
     pinModes[motorPins[k]] = OUTPUT + 1;
     pinMode(motorPins[k], OUTPUT);
   }
@@ -116,43 +114,63 @@ void setup(){
 // loop
 // Main program loop
 //----------------------------------------------------------------------------
-void loop(){
-  byte newChars = Serial.readBytesUntil('\n', inputBuffer + inputBufferSize, INPUT_BUFFER_SIZE - inputBufferSize);
-  inputBufferSize += newChars;
-  while (inputBufferSize > 10 && inputBuffer[inputBufferSize - 1] == COMMAND_SEPERATOR && commandsSize < COMMAND_BUFFER_SIZE){
-    // Add to be executed
-    memcpy(commands[commandsSize], &inputBuffer[inputBufferSize - 11], 10);
-    inputBufferSize -= 11;
-    commandsSize++;
-  }
-  // Execute the commands FIFO.
-  if (commandsSize > 0){
-    for (int k = commandsSize - 1; k >= 0; k--){
-      char args[] = {commands[k][1],commands[k][2]};
-      processCommand(commands[k][0], atof(commands[k] + 3), args);
+void loop() {
+  // get next byte from serial
+  int next_byte = Serial.read();
+
+  if (next_byte != -1) {
+    if ((byte)next_byte == COMMAND_SEPARATOR) {
+      if (input_buffer_size >= COMMAND_SIZE) {
+        // find beginning of last command
+        int command_start = input_buffer_head - COMMAND_SIZE;
+        command_start = (command_start + INPUT_BUFFER_SIZE) % INPUT_BUFFER_SIZE;
+
+        // copy command out of input buffer
+        byte command[COMMAND_SIZE];
+
+        int bytes_copied_from_end = min(INPUT_BUFFER_SIZE - command_start, COMMAND_SIZE);
+        memcpy(command, input_buffer + command_start, bytes_copied_from_end);
+        memcpy(command + bytes_copied_from_end, input_buffer, COMMAND_SIZE - bytes_copied_from_end);
+
+        Serial.write('S');
+        for (int i = 0; i < COMMAND_SIZE; i++) {
+            Serial.print(command[i], HEX);
+        }
+        Serial.write('E');
+
+        // process command
+        float arg;
+        memcpy(&arg, &command[3], 4);
+        Serial.print(*(unsigned long*)(&arg), HEX);
+        Serial.print("ag:");
+        Serial.print(arg);
+        Serial.print("end");
+        processCommand((char)command[0], arg, (char*)command + 1);
+      }
+
+      // clear input buffer
+      input_buffer_size = 0;
+      input_buffer_head = 0;
+
+    } else {
+      // put new character into input buffer
+      input_buffer[input_buffer_head] = (byte)next_byte;
+
+      input_buffer_head = (input_buffer_head + 1) % INPUT_BUFFER_SIZE;
+      if (input_buffer_size < INPUT_BUFFER_SIZE - 1) {
+        input_buffer_size++;
+      }
     }
-    commandsSize = 0;
   }
-  // Do some clean-up here if too much stuff
-//  if (inputBufferSize >= INPUT_BUFFER_SIZE * 0.5){
-//     for (int k = inputBufferSize; k > 0; k--){
-//       if (inputBuffer[k] != COMMAND_SEPERATOR){
-//         inputBuffer[k] = 0;
-//         inputBufferSize--;
-//       }else{
-//         break;
-//       }
-//     }
-//  }
-  
 }
 
 //----------------------------------------------------------------------------
 // processCommand
 // Switch off to the different specified functions
 //----------------------------------------------------------------------------
-void processCommand(char cmd, float arg3_f, char* args){
-  switch (cmd){
+void processCommand(char cmd, float arg3_f, char* args) {
+  Serial.write(cmd);
+  switch (cmd) {
     case 'm' : // Motor Speed Command
       runMotorCommand(arg3_f, args[0], args[1]);
       break;
@@ -193,9 +211,9 @@ void runMotorCommand(float mspeed, char arg1, char arg2) {
   // the conditions for each wheel are met above to enable it.
   // Ex: If shouldSetMotors[0] (front) and shouldSetMotors[2] (left),
   //     then apply the speed to the pin MOTOR_FL_PWM_PIN
-  for (int k = 0; k < 4; k++){
-    if (shouldSetMotors[k/2] && shouldSetMotors[2+k%2]){
-      writeMotorSpeed(mspeed, motorPins[k], motorPins[k+4]);
+  for (int k = 0; k < 4; k++) {
+    if (shouldSetMotors[k / 2] && shouldSetMotors[2 + k%2]) {
+      writeMotorSpeed(mspeed, motorPins[k], motorPins[k + 4]);
     }
   }
 }
@@ -204,33 +222,35 @@ void runMotorCommand(float mspeed, char arg1, char arg2) {
 // Changes the pin type as needed.
 // Provides an error if pin has already been decided on
 //----------------------------------------------------------------------------
-boolean applyPinType(byte pinID, byte type){
+boolean applyPinType(byte pinID, byte type) {
   return true;
-  if (pinModes[pinID] == type + 1){
+  if (pinModes[pinID] == type + 1) {
     return true;
-  }else if (pinModes[pinID] == 0 || !STRICT_PINS){
+  } else if (pinModes[pinID] == 0 || !STRICT_PINS) {
     pinModes[pinID] = type + 1;
     pinMode(pinID, type);
     return true;
   }
   // Pin has already been set to a different type, and strict pins is enabled.
   // Raise an error, and don't allow the command to complete
-  sprintf(errorReport,"Pin %i is %s", pinID, (pinModes[pinID] == OUTPUT + 1 ? "OUTPUT" : "INPUT"));
+  sprintf(errorReport, "Pin %i is %s", pinID, (pinModes[pinID] == OUTPUT + 1 ? "OUTPUT" : "INPUT"));
   Serial.println("-1");
   Serial.println(errorReport);
   return false;
 }
+
 //----------------------------------------------------------------------------
 // getPin
 // Gets the pin number from a set of characters.
 // Works for pins labeled A and such as well.
 //----------------------------------------------------------------------------
-byte getPin(char pin[]){
-  if (pin[0] == 'A'){
+byte getPin(char pin[]) {
+  if (pin[0] == 'A') {
     return aPins[atoi(pin + 1)]; 
   }
   return atoi(pin);
 }
+
 //----------------------------------------------------------------------------
 // writeMotorSpeed
 // Sets one of the pre-defined motors to a particular speed
@@ -244,39 +264,43 @@ void writeMotorSpeed(float mspeed, byte pwm_pin, byte gpio_pin) {
     analogWrite(pwm_pin, (1 + mspeed) * 255);
   }
 }
+
 //----------------------------------------------------------------------------
 // readPinDigital
 // Reads the value of a digital pin, and writes either 0 or 1
 //----------------------------------------------------------------------------
 void readPinDigital(byte pinID) {
   // Check if pin type set to read
-  if (applyPinType(pinID,INPUT)){
+  if (applyPinType(pinID, INPUT)) {
     // Read the pin
     Serial.println(digitalRead(pinID));
   }
 }
+
 //----------------------------------------------------------------------------
 // writePinDigital
 // Writes a value to a particular pin
 //----------------------------------------------------------------------------
 void writePinDigital(byte pinID, int output) {
   // Check if pin type set to write
-  if (applyPinType(pinID,OUTPUT)){
+  if (applyPinType(pinID, OUTPUT)) {
     // Write to the pin
-    digitalWrite(pinID,output);
+    digitalWrite(pinID, output);
   }
 }
+
 //----------------------------------------------------------------------------
 // readPinAnalog
 // Reads the value of an analog pin, and prints a number from 0 to 1024.
 //----------------------------------------------------------------------------
 void readPinAnalog(byte pinID) {
   // Check if pin type set to read
-  if (applyPinType(pinID,INPUT)){
+  if (applyPinType(pinID, INPUT)) {
     // Read the pin
     Serial.println(analogRead(pinID));
   }
 }
+
 //----------------------------------------------------------------------------
 // writePinAnalog
 // Writes a value to a particular pin
@@ -286,29 +310,32 @@ void readPinAnalog(byte pinID) {
 void writePinAnalog(byte pinID, int output) {
   // When writing, you do not need to set the pin type to output,
   // However, strict mode should prevent us from doing anything
-  if (applyPinType(pinID,OUTPUT)){
+  if (applyPinType(pinID, OUTPUT)) {
     // Write to the pin
-    analogWrite(pinID,output);
+    analogWrite(pinID, output);
   }
 }
+
 //----------------------------------------------------------------------------
 // playTone
 // Plays a tone at a specified frequency on a pin
 //----------------------------------------------------------------------------
-void playTone(byte pinID, int freq){
+void playTone(byte pinID, int freq) {
   // Stop the tone as needed
-  if (tonePin != 0){
+  if (tonePin != 0) {
     noTone(tonePin);
     tonePin = 0;
   }
-  if (pinID == 0){
+
+  if (pinID == 0) {
     return;
   }
+
   // Start the new tone, with appropriate duration
   tonePin = pinID;
-  if (toneDuration == 0){
-    tone(pinID,freq); 
-  }else{
-    tone(pinID,freq,toneDuration);
+  if (toneDuration == 0) {
+    tone(pinID, freq); 
+  } else {
+    tone(pinID, freq, toneDuration);
   }
 }

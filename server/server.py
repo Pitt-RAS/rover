@@ -8,6 +8,7 @@ import RPIO.PWM as PWM
 
 import json
 import serial
+import struct
 import time
 import threading
 
@@ -15,6 +16,8 @@ from collections import deque
 
 # Threads currently open in this application
 open_threads = []
+# Messages needed to be processed
+messages = deque()
 
 #-----------------------------------------------------
 # set_camera_servo_position
@@ -106,24 +109,27 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
 	#-----------------------------------------------------
 	def on_message(self, message):
 		msg = json.loads(message)
+                print msg
 		
 		# Arrow key input for motors
 		if (msg.has_key('Keys')):
 			# Arrow keys are sent in a binary format:
 			# 1 - Up, 2 - Down, 4 - Left, 8 - Right
 			arrows = msg['Keys']
-			dir = [arrows & 1, (arrows & 2) >> 1, (arrows & 4) >> 2, (arrows & 8) >> 3]
-			wheels = [-dir[0]+dir[1]+dir[2]-dir[3],dir[0]-dir[1]+dir[2]-dir[3]]
+			direction = [arrows & 1, (arrows & 2) >> 1, (arrows & 4) >> 2, (arrows & 8) >> 3]
+			wheels = [-direction[0]+direction[1]+direction[2]-direction[3],direction[0]-direction[1]+direction[2]-direction[3]]
 			# The left and right sets of wheels will always move in the same direction.
 			# If a specific wheel needs to be addressed instead, use mfl or mbl
-			w0 = '%.7f'% (wheels[0]*self.throttle)
-			w1 = '%.7f'% (wheels[1]*self.throttle)
-			mal = 'mal'+w0[:7]+':'
-			mar = 'mar'+w1[:7]+':'
 			# Write the values to the arduino
-			arduino_serial.write(mal)
-			arduino_serial.write(mar+'\n')
-					
+			arduino_serial.write('mal')
+                        for b in struct.pack('f', wheels[0] * self.throttle):
+                            arduino_serial.write(b)
+                        arduino_serial.write(':')
+			arduino_serial.write('mar')
+                        for b in struct.pack('f', wheels[1] * self.throttle):
+                            arduino_serial.write(b)
+                        arduino_serial.write(':')
+
 		# Slider used to adjust throttle for all motors
 		if (msg.has_key('Thr')):
 			self.throttle = msg['Thr'] / 256.0
@@ -141,15 +147,16 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
 	#-----------------------------------------------------
 	def on_close(self):
 		self._closed = True
-		
+
 def data_received(message):
 	if message != None:
 		print("Message received: " + message)
+		messages.enqueue(message)
 		#Need to handle message, cannot handle hardware IO here as another incoming data piece will destroy this one and cause exceptions if it does not finish quickly
 		#It will require another thread to handle the stream of input data
 	else:
 		print("Connection was closed")
-	
+
 #-----------------------------------------------------
 # Program starts here
 #-----------------------------------------------------
@@ -160,7 +167,7 @@ if __name__ == '__main__':
 		(r'/(.*)', tornado.web.StaticFileHandler, { 'path': './www', 'default_filename': 'index.html' })
 	])
 	# Set up connection to Arduino on the USB port
-	arduino_serial = serial.Serial('/dev/ttyAMA0', 115200);
+	arduino_serial = serial.Serial('/dev/ttyUSB0', 115200);
 	# Time in between thread polling
 	polling_time = 0.1
 	# Pins that the camera uses
@@ -175,7 +182,6 @@ if __name__ == '__main__':
 	# Set camera servos 0 and 1 to 0
 	#set_camera_servo_position(0,0)
 	#set_camera_servo_position(1,0)
-
 
 	conn = websocket_connect('ws://aftersomemath.com:8888/rover', on_message_callback = data_received)
 

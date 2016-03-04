@@ -2,4 +2,4 @@
 arduino/.build
 
 #ignore all .log files
-./*.log
+*.log
