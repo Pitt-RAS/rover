@@ -8,6 +8,7 @@ var direction = 0;
 var arrowKeys = [false, false, false, false];
 var orientation = [0,0,0,0,0];
 var allowTilt = true;
+var rotationSpeed = 10
 
 document.onkeydown = setKeyDown;
 document.onkeyup = setKeyUp;
@@ -28,19 +29,19 @@ function setKeyDown(e) {
         switch (e.keyCode){
             case 87: // W
                 // Increase Beta by 1
-                increaseRotation(2,1,180);
+                increaseRotation(2,rotationSpeed,180);
                 break;
             case 83: // S
                 // Decrease Beta by 1
-                increaseRotation(2,-1,180);
+                increaseRotation(2,-rotationSpeed,180);
                 break;
             case 65: // A
                 // Increase Gamma by 1
-                increaseRotation(3,1,90);
+                increaseRotation(3,rotationSpeed,90);
                 break;
             case 68: // D
                 // Decrease Gamma by 1
-                increaseRotation(3,-1,90);
+                increaseRotation(3,-rotationSpeed,90);
                 break;
         }
     }

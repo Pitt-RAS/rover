@@ -52,6 +52,13 @@
 // which is the default behavior.
 // ex; t000000100:
 //----------------------------------------------------------------------------
+// s (Set servo angle)
+// - first character = servoId. h = the horizontal axis servo v= the vertical access servo.
+// - unused, can be anything
+// - float for angle valid range is 0 to 180
+//----------------------------------------------------------------------------
+
+#include <Servo.h>
 
 // How many characters should be back-logged for the input buffer
 #define INPUT_BUFFER_SIZE 10
@@ -71,6 +78,10 @@
 #define MOTOR_FR_GPIO_PIN 3
 #define MOTOR_BL_GPIO_PIN 4
 #define MOTOR_BR_GPIO_PIN 8
+
+// Servo Center
+#define SERVO_V_CENTER 120
+#define SERVO_H_CENTER 150
 
 // Buffer for serial input
 byte input_buffer[INPUT_BUFFER_SIZE];
@@ -95,6 +106,9 @@ byte motorPins[] = {
 // Analog pins, for easy access in getPin
 byte aPins[] = {A0, A1 ,A2, A3, A4, A5, A6, A7};
 
+// Servo objects one for horizontal and vertical axis
+Servo h_servo, v_servo;  // create servo object to control a servo
+
 //----------------------------------------------------------------------------
 // setup
 // Runs once when the program starts
@@ -108,6 +122,13 @@ void setup() {
     pinModes[motorPins[k]] = OUTPUT + 1;
     pinMode(motorPins[k], OUTPUT);
   }
+  
+  h_servo.attach(A1);  // attaches the servo on pin A0 to the servo object
+  v_servo.attach(A0);  // attaches the servo on pin A1 to the servo object
+  //Write initial position, should be centered
+  h_servo.write(SERVO_H_CENTER);
+  v_servo.write(SERVO_V_CENTER);
+  
 }
 
 //----------------------------------------------------------------------------
@@ -132,19 +153,19 @@ void loop() {
         memcpy(command, input_buffer + command_start, bytes_copied_from_end);
         memcpy(command + bytes_copied_from_end, input_buffer, COMMAND_SIZE - bytes_copied_from_end);
 
-        Serial.write('S');
+        /*Serial.write('S');
         for (int i = 0; i < COMMAND_SIZE; i++) {
             Serial.print(command[i], HEX);
         }
         Serial.write('E');
-
+        */
         // process command
         float arg;
         memcpy(&arg, &command[3], 4);
-        Serial.print(*(unsigned long*)(&arg), HEX);
+        /*Serial.print(*(unsigned long*)(&arg), HEX);
         Serial.print("ag:");
         Serial.print(arg);
-        Serial.print("end");
+        Serial.print("end");*/
         processCommand((char)command[0], arg, (char*)command + 1);
       }
 
@@ -167,9 +188,14 @@ void loop() {
 //----------------------------------------------------------------------------
 // processCommand
 // Switch off to the different specified functions
+// cmd is the first character of the command, it signifies while case statement will execute
+// arg3_f floating point payload
+// args is a 2 character array of the two argument characters
 //----------------------------------------------------------------------------
 void processCommand(char cmd, float arg3_f, char* args) {
-  Serial.write(cmd);
+  Serial.print(cmd);
+  Serial.print(' ' + args + ' ');
+  Serial.println(arg3_f);
   switch (cmd) {
     case 'm' : // Motor Speed Command
       runMotorCommand(arg3_f, args[0], args[1]);
@@ -191,6 +217,10 @@ void processCommand(char cmd, float arg3_f, char* args) {
       break;
     case 't' : // Set tone duration
       toneDuration = (int) arg3_f;
+      break;
+    case 's' : // Set servo position
+      Serial.println("s called");
+      writeServoPosition(args, arg3_f);
       break;
   }
 }
@@ -338,4 +368,19 @@ void playTone(byte pinID, int freq) {
   } else {
     tone(pinID, freq, toneDuration);
   }
+}
+//----------------------------------------------------------------------------
+// writeServoPosition
+// write a position to a servo
+//----------------------------------------------------------------------------
+void writeServoPosition(char* args, float arg3_f) {
+    constrain(arg3_f, 0, 180);
+    switch(args[0]){
+        case 'v':
+            v_servo.write(constrain(arg3_f + SERVO_V_CENTER, 0, 180));
+            break;
+        case 'h':
+            h_servo.write(constrain(arg3_f + SERVO_H_CENTER, 0, 180));
+            break;
+    }
 }

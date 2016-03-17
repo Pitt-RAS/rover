@@ -27,19 +27,23 @@ messages = deque()
 	#pulse = camera_servo_pulse[servo] + float(camera_servo_pulse[servo+2] - camera_servo_pulse[servo]) * (position - camera_servo_angle[servo]) / (camera_servo_angle[servo+1] - camera_servo_angle[servo])
 	#pulse = (pulse//10)*10
 	#camera_servo1.set_servo(camera_servo_pins[servo], pulse)
-def set_camera_servo1_position(position):
-	print("updating servo1:" + str(position))
-	pulse = camera_servo1_min_pulse + camera_servo1_pulse_diff * (position - camera_servo1_min_angle) / (camera_servo1_max_angle - camera_servo1_min_angle)
-	pulse = (pulse//10)*10
-	camera_servo1.set_servo(camera_servo1_pin, pulse)
+def v_servo_write(position):
+	#print("updating servo1: " + str(position))
+	arduino_serial.write('sv' + 'v') # extra v is dummy character
+	#The offset is because 120 degrees is actually 0 its constrained on the arduino
+	for b in struct.pack('f', position):
+		arduino_serial.write(b)
+	arduino_serial.write(':')
 	
-def set_camera_servo2_position(position):
-	print("updating servo2" + str(position))
-	pulse = camera_servo2_min_pulse + camera_servo2_pulse_diff * (position - camera_servo2_min_angle) / (camera_servo2_max_angle - camera_servo2_min_angle)
-	pulse = (pulse//10)*10
-	camera_servo2.set_servo(camera_servo2_pin, pulse)
 
-	
+def h_servo_write(position):
+	#print("updating servo2: " + str(position))
+	arduino_serial.write('sh' + 'h') #extra h is dummy character
+	#The offset is because 150 degrees is actually 0 its constrained on the arduino
+	for b in struct.pack('f', position):
+		arduino_serial.write(b)
+	arduino_serial.write(':')
+
 #-----------------------------------------------------
 # cleanup
 # Shut everything down
@@ -122,6 +126,7 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
 	# Handles input from the app
 	#-----------------------------------------------------
 	def on_message(self, message):
+		print("received message")
 		msg = json.loads(message)
 		# Arrow key input for motors
 		if (msg.has_key('Keys')):
@@ -133,6 +138,7 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
 			# The left and right sets of wheels will always move in the same direction.
 			# If a specific wheel needs to be addressed instead, use mfl or mbl
 			# Write the values to the arduino
+			#print('writing some velocity or something')
 			arduino_serial.write('mal')
                         for b in struct.pack('f', wheels[0] * self.throttle):
                             arduino_serial.write(b)
@@ -141,6 +147,7 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
                         for b in struct.pack('f', wheels[1] * self.throttle):
                             arduino_serial.write(b)
                         arduino_serial.write(':')
+			#print(arduino_serial.readline())
 
 		# Slider used to adjust throttle for all motors
 		if (msg.has_key('Thr')):
@@ -148,12 +155,8 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
 		# Tilt used to adjust camera position
 		if (msg.has_key('Tilt')):
 			orientation = msg['Tilt']
-			if (abs(self.servoPos1 - orientation[2]) >= 5):
-				self.servoPos1 = orientation[2]
-				set_camera_servo1_position(orientation[2]/2)
-			if (abs(self.servoPos2 - orientation[3]) >= 5):
-				self.servoPos2 = orientation[3]
-				set_camera_servo2_position(orientation[3])
+			v_servo_write(orientation[2])
+			h_servo_write(orientation[3])
 
 	#-----------------------------------------------------
 	# check_origin
@@ -169,45 +172,6 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
 	def on_close(self):
 		self._closed = True
 
-def data_received(message):
-	if message != None:
-		print("Message received: " + message)
-		messages.enqueue(message)
-		#Need to handle message, cannot handle hardware IO here as another incoming data piece will destroy this one and cause exceptions if it does not finish quickly
-		#It will require another thread to handle the stream of input data
-	else:
-		print("Connection was closed")
-
-		
-def initialize_camera_servos():
-	global camera_servo1_pin, camera_servo2_pin
-	global camera_servo1_min_pulse, camera_servo2_min_pulse
-	global camera_servo1_max_pulse, camera_servo2_max_pulse
-	global camera_servo1_min_angle, camera_servo2_min_angle
-	global camera_servo1_max_angle, camera_servo2_max_angle
-	global camera_servo1, camera_servo2
-	global camera_servo1_pulse_diff, camera_servo2_pulse_diff
-
-	camera_servo1_pin = 27
-	camera_servo2_pin = 22
-
-	camera_servo1_min_pulse = 18950
-	camera_servo1_max_pulse = 19650
-	camera_servo2_min_pulse = 18740
-	camera_servo2_max_pulse = 19370
-
-	camera_servo1_min_angle = -75
-	camera_servo1_max_angle = 75
-	camera_servo2_min_angle = -35
-	camera_servo2_max_angle = 90
-	
-	camera_servo1_pulse_diff = float(camera_servo1_max_pulse - camera_servo1_min_pulse)
-	camera_servo2_pulse_diff = float(camera_servo2_max_pulse - camera_servo2_min_pulse)
-
-	camera_servo1 = PWM.Servo(12)
-	camera_servo2 = PWM.Servo(13)
-	set_camera_servo1_position(0)
-	set_camera_servo2_position(0)
 #-----------------------------------------------------
 # Program starts here
 #-----------------------------------------------------
@@ -221,21 +185,8 @@ if __name__ == '__main__':
 	arduino_serial = serial.Serial('/dev/ttyAMA0', 115200);
 	# Time in between thread polling
 	polling_time = 0.1
-	# Pins that the camera uses
-	camera_servo_pins = [27,22]
-	# Camera Servo Pulse = [min1, min2, max1, max2]
-	camera_servo_pulse = [18950,18740,19650,19370]
-	# Camera Servo Angle = [min1, min2, max1, max2]
-	camera_servo_angle = [-75, -35, 75, 90]
 
-	camera_servo1 = PWM.Servo(12)
-	camera_servo2 = PWM.Servo(13)
-	# Set camera servos 0 and 1 to 0
-	#set_camera_servo_position(0,0)
-	#set_camera_servo_position(1,0)
-	initialize_camera_servos()
-
-	conn = websocket_connect('ws://aftersomemath.com:8888/rover', on_message_callback = data_received)
+	#conn = websocket_connect('ws://aftersomemath.com:8888/rover', on_message_callback = data_received)
 
 	application.listen(80)
 	try:
