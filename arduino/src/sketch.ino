@@ -80,8 +80,8 @@
 #define MOTOR_BR_GPIO_PIN 8
 
 // Servo Center
-#define SERVO_V_CENTER 120
-#define SERVO_H_CENTER 150
+#define SERVO_V_CENTER 90
+#define SERVO_H_CENTER 100
 
 // Buffer for serial input
 byte input_buffer[INPUT_BUFFER_SIZE];
