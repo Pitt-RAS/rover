@@ -193,9 +193,9 @@ void loop() {
 // args is a 2 character array of the two argument characters
 //----------------------------------------------------------------------------
 void processCommand(char cmd, float arg3_f, char* args) {
-  Serial.print(cmd);
-  Serial.print(' ' + args + ' ');
-  Serial.println(arg3_f);
+  //Serial.print(cmd);
+  //Serial.print(' ' + args + ' ');
+  //Serial.println(arg3_f);
   switch (cmd) {
     case 'm' : // Motor Speed Command
       runMotorCommand(arg3_f, args[0], args[1]);
@@ -219,7 +219,7 @@ void processCommand(char cmd, float arg3_f, char* args) {
       toneDuration = (int) arg3_f;
       break;
     case 's' : // Set servo position
-      Serial.println("s called");
+      //Serial.println("s called");
       writeServoPosition(args, arg3_f);
       break;
   }

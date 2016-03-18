@@ -1,5 +1,6 @@
 $(document).ready(function() {
     var webSock = new WebSocket("ws://192.168.1.5/keysocket");
+    webSock.onmessage = getData;
 
     //var ip = $('#ip-addr').on('keyup', function(){
      //       $('#ip').html($('#ip-addr').val());
@@ -30,9 +31,12 @@ $(document).ready(function() {
         var msg = JSON.parse(event.data);
         // We can select specific JSON groups by using msg.name, where JSON contains "name":x
         // Every type MUST have msg.type to determine what else is pulled from it
-        switch msg.type{
+        switch (msg.type){
             case "print": // Print out msg.data
                 console.log(msg.data);
+                break;
+            case "battery":
+                $('#battery-voltage').text(msg.data);
                 break;
         }
     }
@@ -136,7 +140,10 @@ $(document).ready(function() {
     	tiltDot.style.left = (orientation[3] * (57 / 90)) + 'px';
     	tiltDot.style.top = (orientation[2] * (57 / 180)) + 'px';
     	console.log(tiltDot.style.left);
+        $('#servo-vertical-angle').text(orientation[2]);
+        $('#servo-horizontal-angle').text(orientation[3]);
     }
+
     //---------------------------------------------
     // sendData
     // Send the key data over the websocket

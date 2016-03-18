@@ -47,7 +47,7 @@ def poll(ws):
             break
         #ws.write_message(u'send_input')
         battery = arduino_com.read_battery()
-        ws.write_message(u'{"type":"battery", "data":'+battery);
+        ws.write_message('{"type":"battery", "data":%f}'%battery);
         time.sleep(polling_time)
     # Thread is dead, remove
     open_threads.remove(threading.current_thread())
