@@ -1,0 +1,10 @@
+[Unit]
+Description=server start script
+
+[Service]
+WorkingDirectory=/bin/
+ExecStart=/bin/bash start-everything.sh restart
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target

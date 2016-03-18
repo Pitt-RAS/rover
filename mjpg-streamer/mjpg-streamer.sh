@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VIDEO_DEV="/dev/video0"
+VIDEO_DEV="$2"
 FRAME_RATE="15"
 RESOLUTION="640x480"
 PORT="8080"
