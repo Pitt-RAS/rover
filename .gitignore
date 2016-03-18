@@ -3,3 +3,6 @@ arduino/.build
 
 #ignore all .log files
 *.log
+
+#ignore compiled python files
+*.pyc
