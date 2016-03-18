@@ -1,4 +1,5 @@
 import serial
+import struct
 
 #-----------------------------------------------------
 # set_camera_servo_position
@@ -25,13 +26,24 @@ def h_servo_write(position):
     
 def controlMotors(wheels, throttle):
     arduino_serial.write('mal')
-                        for b in struct.pack('f', wheels[0] * throttle):
-                            arduino_serial.write(b)
-                        arduino_serial.write(':')
-                        arduino_serial.write('mar')
-                        for b in struct.pack('f', wheels[1] * throttle):
-                            arduino_serial.write(b)
-                        arduino_serial.write(':')
+    for b in struct.pack('f', wheels[0] * throttle):
+        arduino_serial.write(b)
+    arduino_serial.write(':')
+    arduino_serial.write('mar')
+    for b in struct.pack('f', wheels[1] * throttle):
+        arduino_serial.write(b)
+    arduino_serial.write(':')
+    
+def read_battery():
+    arduino_serial.write('RA2')
+    for b in struct.pack('f', 0):
+        arduino_serial.write(b)
+    arduino_serial.write(':')
+    message = arduino_serial.readline()
+    #print(message)
+    voltage = ((int(message)/1024.0) * 5.13)
+    battery_voltage = voltage/0.3625
+    return battery_voltage
 
 
 arduino_serial = serial.Serial('/dev/ttyAMA0', 115200);

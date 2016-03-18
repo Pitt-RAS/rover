@@ -207,7 +207,7 @@ void processCommand(char cmd, float arg3_f, char* args) {
       writePinDigital(getPin(args), (arg3_f == 0 ? LOW : HIGH));
       break;
     case 'R' : // Read Pin Analog
-      readPinDigital(getPin(args));
+      readPinAnalog(getPin(args));
       break;
     case 'W' : // Write Pin Analog
       writePinDigital(getPin(args), ((int) arg3_f) % 256);
