@@ -24,7 +24,32 @@
 #content > #right > .dose > .dosesingle,
 #content > #center > .dose > .dosesingle,
 #carbonads-container
-{display:none !important;}</style></head>
+{display:none !important;}
+                
+                .johncontainer
+                {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    
+                    background-image: url("img/Radar.png");
+                    background-size: 100%;
+                    width: 132px;
+                    height: 132px;
+                }
+                .johncontainer .johninner
+                {
+                    position: relative;
+                    bottom: 0px;
+                    left: 0px;
+                    
+                    background-image: url("img/Radar Dot.png");
+                    background-size: 100%;
+                    width: 24px;
+                    height: 24px;
+                }
+                
+                </style></head>
 
                 <body linkifymax="0" linkifycurrent="0" linkifying="true">
 
@@ -34,7 +59,7 @@
                                         </li>
                                         <li class="nav-item">
                                                 <!-- text box to enter ip address -->
-                                                <a class="navbar-brand">ip address:</a><input type="text" placeholder="xxx.xxx.xxx.xxx" id="ip-addr"/>
+                                                <a class="navbar-brand">ip address:</a><input type="text" placeholder="192.168.001.005" id="ip-addr"/>
                                         </li>
                                 </ul>
                         </nav>
@@ -46,10 +71,20 @@
                         <table>
                                 <tr>
                                         <td>
-                                                <img src="http://192.168.1.5:8080/?action=stream">
+                                                <img src="http://192.168.1.5:8080/?action=stream" alt="Stream1">
                                         </td>
                                         <td>
-                                                <img src="http://192.168.1.5:8080/?action=stream">
+                                                <img src="http://192.168.1.5:8080/?action=stream" alt="Stream2">
+                                        </td>
+                                        <td>
+                                            <div class="johncontainer">
+                                                <div class="johninner" id="TiltDot">
+                                                
+                                                </div>
+                                            <!--</div>
+                                                <img src="img/Radar.png" alt="Tilt" style="width:128px;height:128px;z-index:-1; " id="TiltRadar">
+                                                <img src="img/Radar Dot.png" alt="" style="width:24px;height:24px;" id="TiltDot">
+                                            </div>-->
                                         </td>
 
 

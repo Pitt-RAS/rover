@@ -1,28 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 
-        <head>
-                <meta charset="UTF-8">
-                <title>Rover Interface</title>
+<head>
+    <meta charset="UTF-8">
+    <title>Rover Interface</title>
 
-                <link rel="stylesheet" href="css/interface.css">
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="http://v4-alpha.getbootstrap.com/favicon.ico">
 
+    <!-- Bootstrap core CSS -->
+    <link href="index_files/bootstrap.css" rel="stylesheet">
 
-        </head>
-        <body>
-                <h1 class="interface-title">Rover Interface</h1>
+    <!-- Custom styles for this template -->
+    <link href="index_files/jumbotron.css" rel="stylesheet">
 
-                <table class="interface-center"
-                        <tr>
-                                <td>
-                                        <img src="http://192.168.1.5:8080/?action=stream">
-                                </td>
-                                <td>
-                                        <img src="http://192.168.1.5:8080/?action=stream">
-                                </td>
-                        </tr>
-                </table>
+    <!-- interface style sheet -->
+    <link href="css/interface.css" rel="stylesheet">
 
-				<script src="js/interface.js"></script>
-        </body>
+</head>
+<body>
+    <h1 class="interface-title">Rover Interface</h1>
+
+    <table class="interface-center"
+        <tr>
+            <td>
+                <img src="http://192.168.1.5:8080/?action=stream">
+            </td>
+            <td>
+                <img src="http://192.168.1.5:8080/?action=stream">
+            </td>
+        </tr>
+    </table>
+    <a id='fullscreen-button' class='btn btn-default' role='button'>Fullscreen</a>
+
+    <!-- Bootstrap core JavaScript
+        ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="index_files/jquery.js"></script>
+    <script src="js/interface.js"></script>
+    <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')</script>
+    <script src="index_files/bootstrap.js"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="index_files/ie10-viewport-bug-workaround.js"></script>
+</body>
 </html>
