@@ -153,8 +153,8 @@ if __name__ == '__main__':
     # Start the websocket
     application = tornado.web.Application([
         (r'/keysocket', KeyPressHandler),
-        (r'/(.*)', tornado.web.StaticFileHandler, { 'path': './www', 'default_filename': 'index.html' })
-    ])
+        (r'/(.*)', tornado.web.StaticFileHandler, { 'path': os.path.join(os.path.dirname(os.path.realpath(__file__)), 'www'), 'default_filename': 'index.html' })
+    ], debug = True)
     # Set up connection to Arduino on the USB port
     arduino_serial = serial.Serial('/dev/ttyAMA0', 115200);
     # Time in between thread polling
