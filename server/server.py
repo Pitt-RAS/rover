@@ -7,11 +7,15 @@ import RPIO as GPIO
 import RPIO.PWM as PWM
 
 import json
+import os
 import serial
 import struct
 import time
 import threading
 import arduino_com
+
+import time
+from threading import Timer
 
 from collections import deque
 
@@ -42,6 +46,8 @@ def poll(ws):
         if ws._closed or threading.current_thread().stopped():
             break
         #ws.write_message(u'send_input')
+        battery = arduino_com.read_battery()
+        ws.write_message(u'{"type":"battery", "data":'+battery);
         time.sleep(polling_time)
     # Thread is dead, remove
     open_threads.remove(threading.current_thread())
@@ -115,7 +121,7 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
             # If a specific wheel needs to be addressed instead, use mfl or mbl
             # Write the values to the arduino
             #print('writing some velocity or something')
-            arduino_com.controlMotors(wheels, throttle)
+            arduino_com.controlMotors(wheels, self.throttle)
 
         # Slider used to adjust throttle for all motors
         if (msg.has_key('Thr')):
