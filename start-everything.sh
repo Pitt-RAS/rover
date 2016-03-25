@@ -39,8 +39,9 @@ if [ -z $PID1  ] || [ -z $PID2  ]; then
     done
 
     uvcdynctrl --set="Focus, Auto" COUNTER
-    ((COUNTER++))
-
+    ./mjpg-streamer.sh stop /dev/video${COUNTER} 8082 
+    ./mjpg-streamer.sh stop /dev/video${COUNTER} 8082
+   
     while [ $? != 0 ] || [ ${COUNTER} == "-1" ]; do
         ((COUNTER++))
         ./mjpg-streamer.sh stop /dev/video${COUNTER} 8082
