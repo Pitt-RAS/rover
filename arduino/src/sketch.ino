@@ -70,14 +70,17 @@
 #define STRICT_PINS true
 
 // Motor pins
-#define MOTOR_FL_PWM_PIN 5
-#define MOTOR_FR_PWM_PIN 11
+#define MOTOR_FL_PWM_PIN 6
+#define MOTOR_FR_PWM_PIN 4
 #define MOTOR_BL_PWM_PIN 9
 #define MOTOR_BR_PWM_PIN 10
-#define MOTOR_FL_GPIO_PIN 2
-#define MOTOR_FR_GPIO_PIN 3
-#define MOTOR_BL_GPIO_PIN 4
-#define MOTOR_BR_GPIO_PIN 8
+#define MOTOR_FL_GPIO_PIN 7
+#define MOTOR_FR_GPIO_PIN 5
+#define MOTOR_BL_GPIO_PIN 8
+#define MOTOR_BR_GPIO_PIN 11
+
+#define SERVO1_PIN 12
+#define SERVO2_PIN 13
 
 // Servo Center
 #define SERVO_V_CENTER 90
@@ -123,8 +126,8 @@ void setup() {
     pinMode(motorPins[k], OUTPUT);
   }
   
-  h_servo.attach(A1);  // attaches the servo on pin A0 to the servo object
-  v_servo.attach(A0);  // attaches the servo on pin A1 to the servo object
+  h_servo.attach(SERVO1_PIN);  // attaches the servo on pin A0 to the servo object
+  v_servo.attach(SERVO2_PIN);  // attaches the servo on pin A1 to the servo object
   //Write initial position, should be centered
   h_servo.write(SERVO_H_CENTER);
   v_servo.write(SERVO_V_CENTER);
@@ -263,9 +266,9 @@ boolean applyPinType(byte pinID, byte type) {
   }
   // Pin has already been set to a different type, and strict pins is enabled.
   // Raise an error, and don't allow the command to complete
-  sprintf(errorReport, "Pin %i is %s", pinID, (pinModes[pinID] == OUTPUT + 1 ? "OUTPUT" : "INPUT"));
-  Serial.println("-1");
-  Serial.println(errorReport);
+  //sprintf(errorReport, "Pin %i is %s", pinID, (pinModes[pinID] == OUTPUT + 1 ? "OUTPUT" : "INPUT"));
+  //Serial.println("-1");
+  //Serial.println(errorReport);
   return false;
 }
 
