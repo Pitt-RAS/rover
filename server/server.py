@@ -3,9 +3,6 @@ import tornado.web
 import tornado.websocket
 from tornado.websocket import websocket_connect
 
-import RPIO as GPIO
-import RPIO.PWM as PWM
-
 import json
 import os
 import serial
@@ -120,7 +117,7 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
             # The left and right sets of wheels will always move in the same direction.
             # If a specific wheel needs to be addressed instead, use mfl or mbl
             # Write the values to the arduino
-            #print('writing some velocity or something')
+            # print('writing some velocity or something')
             arduino_com.controlMotors(wheels, self.throttle)
 
         # Slider used to adjust throttle for all motors
@@ -156,13 +153,14 @@ if __name__ == '__main__':
         (r'/(.*)', tornado.web.StaticFileHandler, { 'path': os.path.join(os.path.dirname(os.path.realpath(__file__)), 'www'), 'default_filename': 'index.html' })
     ], debug = True)
     # Set up connection to Arduino on the USB port
-    arduino_serial = serial.Serial('/dev/ttyAMA0', 115200);
+    # arduino_serial = serial.Serial('/dev/ttyACM0', 115200);
+    
     # Time in between thread polling
     polling_time = 0.1
 
     #conn = websocket_connect('ws://aftersomemath.com:8888/rover', on_message_callback = data_received)
 
-    application.listen(80)
+    application.listen(8080)
     try:
         tornado.ioloop.IOLoop.instance().start()
     except KeyboardInterrupt:

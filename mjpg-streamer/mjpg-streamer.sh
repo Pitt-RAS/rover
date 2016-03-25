@@ -3,7 +3,7 @@
 VIDEO_DEV="$2"
 FRAME_RATE="15"
 RESOLUTION="640x480"
-PORT="8080"
+PORT="$3"
 YUV="false"
 
 MJPG_STREAMER_DIR="$(dirname $0)"

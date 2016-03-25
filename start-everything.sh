@@ -34,14 +34,24 @@ if [ -z $PID1  ] || [ -z $PID2  ]; then
 
     while [ $? != 0 ] || [ ${COUNTER} == "-1" ]; do
         ((COUNTER++))
-        ./mjpg-streamer.sh stop /dev/video${COUNTER}
-        ./mjpg-streamer.sh start /dev/video${COUNTER}
+        ./mjpg-streamer.sh stop /dev/video${COUNTER} 8081
+        ./mjpg-streamer.sh start /dev/video${COUNTER} 8081
     done
 
-    uvcdynctrl --set="Focus, Auto" 0
+    uvcdynctrl --set="Focus, Auto" COUNTER
+    ((COUNTER++))
+
+    while [ $? != 0 ] || [ ${COUNTER} == "-1" ]; do
+        ((COUNTER++))
+        ./mjpg-streamer.sh stop /dev/video${COUNTER} 8082
+        ./mjpg-streamer.sh start /dev/video${COUNTER} 8082
+    done
+
+    uvcdynctrl --set="Focus, Auto" COUNTER
 
     #cd ../server
-    python /home/pi/rover/server/server.py &
+    sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
+    python /home/pi/rover/server/server.py >> /home/pi/rover/server/server.log &
 ##############################################################
     get_pid
     echo "Done, PID(server.py)=$PID1 , PID(mjpeg-streamer)=$PID2"

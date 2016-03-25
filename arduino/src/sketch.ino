@@ -70,14 +70,14 @@
 #define STRICT_PINS true
 
 // Motor pins
-#define MOTOR_FL_PWM_PIN 6
-#define MOTOR_FR_PWM_PIN 4
+#define MOTOR_FL_PWM_PIN 7
+#define MOTOR_FL_GPIO_PIN 6
+#define MOTOR_FR_PWM_PIN 5
+#define MOTOR_FR_GPIO_PIN 4
 #define MOTOR_BL_PWM_PIN 9
-#define MOTOR_BR_PWM_PIN 10
-#define MOTOR_FL_GPIO_PIN 7
-#define MOTOR_FR_GPIO_PIN 5
 #define MOTOR_BL_GPIO_PIN 8
-#define MOTOR_BR_GPIO_PIN 11
+#define MOTOR_BR_PWM_PIN 11
+#define MOTOR_BR_GPIO_PIN 10
 
 #define SERVO1_PIN 12
 #define SERVO2_PIN 13

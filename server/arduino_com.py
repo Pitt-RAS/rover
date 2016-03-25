@@ -35,7 +35,7 @@ def controlMotors(wheels, throttle):
     arduino_serial.write(':')
     
 def read_battery():
-    arduino_serial.write('RA2')
+    arduino_serial.write('RA0')
     for b in struct.pack('f', 0):
         arduino_serial.write(b)
     arduino_serial.write(':')
@@ -46,4 +46,4 @@ def read_battery():
     return battery_voltage
 
 
-arduino_serial = serial.Serial('/dev/ttyAMA0', 115200);
+arduino_serial = serial.Serial('/dev/ttyACM0', 115200);
