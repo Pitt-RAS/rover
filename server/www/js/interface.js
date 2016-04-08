@@ -5,6 +5,8 @@ $(document).ready(function() {
     //var ip = $('#ip-addr').on('keyup', function(){
      //       $('#ip').html($('#ip-addr').val());
       //    });
+	  
+	document.getElementById ("SwapEyes").addEventListener ("click", swapEyes, false);
           
     var direction = 0;
     var arrowKeys = [false, false, false, false];
@@ -27,7 +29,7 @@ $(document).ready(function() {
     // Gets a message over the websocket
     //---------------------------------------------
     function getData (event) {
-        console.log(event.data);
+        //console.log(event.data);
         var msg = JSON.parse(event.data);
         // We can select specific JSON groups by using msg.name, where JSON contains "name":x
         // Every type MUST have msg.type to determine what else is pulled from it
@@ -139,7 +141,7 @@ $(document).ready(function() {
     	}
     	tiltDot.style.left = (orientation[3] * (57 / 90)) + 'px';
     	tiltDot.style.top = (orientation[2] * (57 / 180)) + 'px';
-    	console.log(tiltDot.style.left);
+    	//console.log(tiltDot.style.left);
         $('#servo-vertical-angle').text(orientation[2]);
         $('#servo-horizontal-angle').text(orientation[3]);
     }
@@ -162,10 +164,22 @@ $(document).ready(function() {
             toSend += orientation[k]+(k < 3 ? "," : "");
         }
         toSend += "]}";
-        console.log(toSend);
+        //console.log(toSend);
         webSock.send(toSend);
     }
 
+	//---------------------------------------------
+    // swapEyes
+    // Switches the left eye stream with the right
+    //---------------------------------------------
+	function swapEyes(){
+		var eyer = document.getElementById('EyeR');
+		var eyel = document.getElementById('EyeL');
+		var eyer_src = eyer.src;
+		eyer.src = eyel.src;
+		eyel.src = eyer_src;
+	}
+	
     //----------------------------------------------
     // toggleFullscreen
     //----------------------------------------------
