@@ -10,13 +10,29 @@ PID2=`pidof mjpg_streamer`
 
 function stop {
 get_pid
-if [ -z $PID1  ] || [ -z $PID2  ]; then
+if [ -z "${PID1}" ] || [ -z "${PID2}" ]; then
     echo "server is not running."
     exit 1
 else
     echo -n "Halting server..."
-    kill -9 $PID1
-    kill -9 $PID2
+    kill -SIGKILL $PID1
+
+    cd /home/pi/rover/mjpg-streamer
+    COUNTER=-1
+
+    while [ $? != 0 ] || [ ${COUNTER} == "-1" ]; do
+        ((COUNTER++))
+        ./mjpg-streamer.sh stop /dev/video${COUNTER} 8081
+    done
+
+    ((COUNTER++))
+    ./mjpg-streamer.sh stop /dev/video${COUNTER} 8082 
+   
+    while [ $? != 0 ]; do
+        ((COUNTER++))
+        ./mjpg-streamer.sh stop /dev/video${COUNTER} 8082
+    done
+
     sleep 1
     echo "... Done."
 fi
@@ -24,7 +40,7 @@ fi
 
 function start {
 get_pid
-if [ -z $PID1  ] || [ -z $PID2  ]; then
+if [ -z "${PID1}" ] || [ -z "${PID2}" ]; then
     echo  "Starting server.."
 ###############################################################
     #cd "$(dirname "$0")"
@@ -39,10 +55,11 @@ if [ -z $PID1  ] || [ -z $PID2  ]; then
     done
 
     uvcdynctrl --set="Focus, Auto" COUNTER
+    ((COUNTER++))
     ./mjpg-streamer.sh stop /dev/video${COUNTER} 8082 
-    ./mjpg-streamer.sh stop /dev/video${COUNTER} 8082
+    ./mjpg-streamer.sh start /dev/video${COUNTER} 8082
    
-    while [ $? != 0 ] || [ ${COUNTER} == "-1" ]; do
+    while [ $? != 0 ]; do
         ((COUNTER++))
         ./mjpg-streamer.sh stop /dev/video${COUNTER} 8082
         ./mjpg-streamer.sh start /dev/video${COUNTER} 8082
@@ -64,7 +81,7 @@ fi
 function restart {
 echo  "Restarting server.."
 get_pid
-if [ -z $PID1  ] && [ -z $PID2  ];then
+if [ -z "${PID1}"  ] && [ -z "${PID2}" ];then
     start
 else
     stop
@@ -77,7 +94,7 @@ fi
 
 function status {
 get_pid
-if [ -z $PID1 ] || [ -z $PID2 ]; then
+if [ -z "${PID1}" ] || [ -z "${PID2}" ]; then
     echo "Server is not running."
     exit 1
 else
