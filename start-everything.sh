@@ -4,8 +4,8 @@ PID1=""
 PID2=""
 
 function get_pid {
-PID1=`pidof python /home/pi/rover/server/server.py`
-PID2=`pidof mjpg_streamer`
+    PID1=`pidof python /home/pi/rover/server/server.py`
+    PID2=`pidof mjpg_streamer`
 }
 
 function stop {
@@ -15,7 +15,7 @@ if [ -z "${PID1}" ] || [ -z "${PID2}" ]; then
     exit 1
 else
     echo -n "Halting server..."
-    kill -SIGKILL $PID1
+    sudo kill -SIGKILL $PID1
 
     cd /home/pi/rover/mjpg-streamer
     COUNTER=-1
@@ -48,28 +48,37 @@ if [ -z "${PID1}" ] || [ -z "${PID2}" ]; then
     cd /home/pi/rover/mjpg-streamer
     COUNTER=-1
 
-    while [ $? != 0 ] || [ ${COUNTER} == "-1" ]; do
-        ((COUNTER++))
-        ./mjpg-streamer.sh stop /dev/video${COUNTER} 8081
-        ./mjpg-streamer.sh start /dev/video${COUNTER} 8081
-    done
+    #while [ $? != 0 ] || [ ${COUNTER} == "-1" ]; do
+    #    ((COUNTER++))
+    #    ./mjpg-streamer.sh stop /dev/video${COUNTER} 8081
+    #    ./mjpg-streamer.sh start /dev/video${COUNTER} 8081
+    #done
 
-    uvcdynctrl --set="Focus, Auto" COUNTER
-    ((COUNTER++))
-    ./mjpg-streamer.sh stop /dev/video${COUNTER} 8082 
-    ./mjpg-streamer.sh start /dev/video${COUNTER} 8082
-   
-    while [ $? != 0 ]; do
-        ((COUNTER++))
-        ./mjpg-streamer.sh stop /dev/video${COUNTER} 8082
-        ./mjpg-streamer.sh start /dev/video${COUNTER} 8082
-    done
+    #uvcdynctrl -v -d video0 --set="Focus, Auto" 0
+    #uvcdynctrl -v -d video${COUNTER} --set="Focus, Auto" 0
 
-    uvcdynctrl --set="Focus, Auto" COUNTER
+    #((COUNTER++))
+    #./mjpg-streamer.sh stop /dev/video${COUNTER} 8082 
+    #./mjpg-streamer.sh start /dev/video${COUNTER} 8082
+    #   
+    #while [ $? != 0 ]; do
+    #    ((COUNTER++))
+    #    ./mjpg-streamer.sh stop /dev/video${COUNTER} 8082
+    #    ./mjpg-streamer.sh start /dev/video${COUNTER} 8082
+    #done
 
+    #uvcdynctrl -v -d video1 --set="Focus, Auto" 0
+    #uvcdynctrl -v -d video${COUNTER} --set="Focus, Auto" 0
+
+    ./mjpg-streamer.sh stop /dev/video0 8081
+    ./mjpg-streamer.sh start /dev/video0 8081
+    ./mjpg-streamer.sh stop /dev/video1 8082
+    ./mjpg-streamer.sh start /dev/video1 8082
+    uvcdynctrl -v -d video0 --set="Focus, Auto" 0
+    uvcdynctrl -v -d video1 --set="Focus, Auto" 0
     #cd ../server
     sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
-    python /home/pi/rover/server/server.py >> /home/pi/rover/server/server.log &
+    python /home/pi/rover/server/server.py >> /home/pi/rover/server/server.log 2>&1 &
 ##############################################################
     get_pid
     echo "Done, PID(server.py)=$PID1 , PID(mjpeg-streamer)=$PID2"

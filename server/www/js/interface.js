@@ -1,5 +1,5 @@
 $(document).ready(function() {
-    var webSock = new WebSocket("ws://192.168.1.5/keysocket");
+    var webSock = new WebSocket("ws://192.168.2.115/keysocket");
     webSock.onmessage = getData;
 
     //var ip = $('#ip-addr').on('keyup', function(){
@@ -7,11 +7,14 @@ $(document).ready(function() {
       //    });
 	  
 	document.getElementById ("SwapEyes").addEventListener ("click", swapEyes, false);
+	document.getElementById ("RecalibrateTilt").addEventListener("click", function(){needRecalibrateTilt = true;}, false);
           
     var direction = 0;
     var arrowKeys = [false, false, false, false];
-    var orientation = [0,0,0,0,0];
-    var allowTilt = true;
+    var orientation = [0,0,0,0,0,0];
+	var tiltCalibration = [0,0,0,0];
+    var allowTilt = false;
+	var needRecalibrateTilt = false;
     var rotationSpeed = 10
     
     var tiltDot = null;
@@ -23,6 +26,9 @@ $(document).ready(function() {
     document.onkeyup = setKeyUp;
     window.addEventListener("deviceorientation", updateOrientation, true);
     $('#fullscreen-button').click(toggleFullscreen);
+	
+	// Calibrate the tilt after half a second
+	setTimeout(function(){needRecalibrateTilt = true;}, 100);
     
     //---------------------------------------------
     // getData
@@ -40,6 +46,9 @@ $(document).ready(function() {
             case "battery":
                 $('#battery-voltage').text(msg.data);
                 break;
+            case "ping_sensors":
+                $('#ping-display').text(JSON.stringify(msg.data));
+                break;
         }
     }
 
@@ -56,20 +65,20 @@ $(document).ready(function() {
             // Check for tilt, keeping dt in mind
             switch (e.keyCode){
                 case 87: // W
-                    // Increase Beta by 1
-                    increaseRotation(2,rotationSpeed,180);
+                    // Increase Gamma by 1
+                    increaseRotation(2,rotationSpeed,90);
                     break;
                 case 83: // S
-                    // Decrease Beta by 1
-                    increaseRotation(2,-rotationSpeed,180);
+                    // Decrease Gamma by 1
+                    increaseRotation(2,-rotationSpeed,90);
                     break;
                 case 65: // A
-                    // Increase Gamma by 1
-                    increaseRotation(3,rotationSpeed,90);
+                    // Increase Alpha by 1
+                    increaseRotation(3,rotationSpeed,180);
                     break;
                 case 68: // D
-                    // Decrease Gamma by 1
-                    increaseRotation(3,-rotationSpeed,90);
+                    // Decrease Alpha by 1
+                    increaseRotation(3,-rotationSpeed,180);
                     break;
             }
         }
@@ -93,6 +102,22 @@ $(document).ready(function() {
         // Stop tilt control
         allowTilt = false;
     }
+	//---------------------------------------------
+    // setRotation
+    // Clamp the rotation to specific limits
+    //---------------------------------------------
+    function setRotation(v, amt, lim){
+        orientation[v] = amt;
+        // Prevent it from going over
+        if (orientation[v] > lim){
+            orientation[v] = lim;
+        }
+        // Prevent it from going under
+        if (orientation[v] < -lim){
+            orientation[v] = -lim;
+        }
+		return orientation[v];
+    }
     //---------------------------------------------
     // setKeyDown
     // Set the arrow key as up
@@ -110,20 +135,72 @@ $(document).ready(function() {
     // Send information about the orientation
     //---------------------------------------------
     function updateOrientation(e) {
+	  // Check if we need to recalibrate
+	  if (needRecalibrateTilt){
+	  console.log("Try calibrate");
+		needRecalibrateTilt = false;
+		recalibrateTilt(e);
+	  }
       // Don't allow tilt if disabled
       if (!allowTilt){return;}
       var ab = Math.round(e.absolute);
-      var a = Math.round(e.alpha);
+      var a = Math.round(e.alpha); // Left and Right
       var b = Math.round(e.beta);
-      var g = Math.round(e.gamma);
+      var g = Math.round(e.gamma);// Up and down
+	  // Normalize all values using the calibration values
+	  //g = setRotation(2,g - tiltCalibration[3],90);
+	  // Fix gamma so it doesn't jump
+	  var inv_g = (g < 0 ? 180 : 0);
+	  //if (g > 0){
+	  //  g -= 90;
+	  //}else{
+	  //  g += 90;
+	  //}
+	  //g -= (tiltCalibration[3] + 90);
+	  //if (g < -90){
+	  //  g  += 180;
+	  //}else if (g > 90) {
+	  //  g -= 180;
+	  //}
+      if (g <= 0) {
+          g = 90 - g;
+      } else {
+          g = -90 - g;
+      }
+      g -= tiltCalibration[3];
+	  //a = setRotation(3,a - tiltCalibration[1],180);
+	  a -= (tiltCalibration[1]/* + inv_g*/);
+	  //if (a < 0){
+	  //  a += 360;
+	  //}
+	  b = 0;
+	  ab = 0;
+	  $('#rotAlpha').text(a);
+	  $('#rotBeta').text(b);
+	  $('#rotGamma').text(g);
       var newOrientation = ab + a + b + g;
       // Check to see if we need to update anything
       if (Math.abs(newOrientation - orientation[4]) > 1){
-        orientation = [ab, a, b, g, newOrientation];
+        orientation = [ab, a, g, b, newOrientation];
         sendData();
       }
       
     }
+	
+	function recalibrateTilt(e){
+      var ab = Math.round(e.absolute);
+      var a = Math.round(e.alpha); // Left and Right
+      var b = Math.round(e.beta);
+      var g = Math.round(e.gamma); // Up and down
+      if (g >= 0) {
+          g = 90 - g;
+      } else {
+          g = -90 - g;
+      }
+	  tiltCalibration = [ab, a, b, g];
+	  console.log("Calibrated");
+	  allowTilt = true;
+	}
     
     //---------------------------------------------
     // updateTiltDot
@@ -164,7 +241,7 @@ $(document).ready(function() {
             toSend += orientation[k]+(k < 3 ? "," : "");
         }
         toSend += "]}";
-        //console.log(toSend);
+        console.log(toSend);
         webSock.send(toSend);
     }
 

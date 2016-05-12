@@ -59,7 +59,7 @@
                                         </li>
                                         <li class="nav-item">
                                                 <!-- text box to enter ip address -->
-                                                <a class="navbar-brand">ip address:</a><input type="text" placeholder="192.168.001.005" id="ip-addr"/>
+                                                <a class="navbar-brand">ip address:</a><input type="text" placeholder="192.168.2.115" id="ip-addr"/>
                                         </li>
                                 </ul>
                         </nav>
@@ -68,11 +68,13 @@
                         <!-- Table container for video streams -->
                         <span id="ip">ip address</span>
 						<button id="SwapEyes">Swap Eyes</button>
+						<button id="RecalibrateTilt">Recalibrate Tilt</button>
+                        <span id='ping-display'></span>
                         <div class="interface-center">
-                        <table>
+                        <table class="interface-table">
                                 <tr>
                                         <td>
-                                                <img src="http://192.168.1.5:8081/?action=stream" alt="Stream1" id="EyeR">
+                                                <img src="http://192.168.2.115:8081/?action=stream" alt="Stream1" id="EyeR">
                                         </td>
                                         <td>
                                                 <img src="http://192.168.1.5:8082/?action=stream" alt="Stream2" id="EyeL">
@@ -80,6 +82,9 @@
                                         <td>
                                             <div>
                                                 <div>Battery: <span id="battery-voltage"></span>V</div>
+												<div>Alpha: <span id="rotAlpha"></span></div>
+												<div>Beta: <span id="rotBeta"></span></div>
+												<div>Gamma: <span id="rotGamma"></span></div>
                                                 <div>Vertical Angle: <span id="servo-vertical-angle"></span></div>
                                                 <div>Horiz Angle: <span id="servo-horizontal-angle"></span></div>
                                                 <div class="johncontainer">

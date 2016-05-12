@@ -57,7 +57,13 @@
 // - unused, can be anything
 // - float for angle valid range is 0 to 180
 //----------------------------------------------------------------------------
+// p (read ping sensor)
+// - characters are used together for sensor id
+// - float value is ignored
+// ex; pbr0000:
+//----------------------------------------------------------------------------
 
+#include "NewPing.h"
 #include <Servo.h>
 
 // How many characters should be back-logged for the input buffer
@@ -70,17 +76,18 @@
 #define STRICT_PINS true
 
 // Motor pins
-#define MOTOR_FL_PWM_PIN 7
-#define MOTOR_FL_GPIO_PIN 6
-#define MOTOR_FR_PWM_PIN 5
-#define MOTOR_FR_GPIO_PIN 4
-#define MOTOR_BL_PWM_PIN 9
-#define MOTOR_BL_GPIO_PIN 8
-#define MOTOR_BR_PWM_PIN 11
-#define MOTOR_BR_GPIO_PIN 10
+#define MOTOR_FL_PWM_PIN 10
+#define MOTOR_FL_GPIO_PIN 11
+#define MOTOR_FR_PWM_PIN 8
+#define MOTOR_FR_GPIO_PIN 9
 
-#define SERVO1_PIN 12
-#define SERVO2_PIN 13
+#define MOTOR_BL_PWM_PIN 4
+#define MOTOR_BL_GPIO_PIN 5
+#define MOTOR_BR_PWM_PIN 6
+#define MOTOR_BR_GPIO_PIN 7
+
+#define SERVO1_PIN 3
+#define SERVO2_PIN 2
 
 // Servo Center
 #define SERVO_V_CENTER 90
@@ -104,6 +111,16 @@ byte tonePin = 0;
 byte motorPins[] = {
   MOTOR_FL_PWM_PIN, MOTOR_FR_PWM_PIN, MOTOR_BL_PWM_PIN, MOTOR_BR_PWM_PIN,
   MOTOR_FL_GPIO_PIN, MOTOR_FR_GPIO_PIN, MOTOR_BL_GPIO_PIN, MOTOR_BR_GPIO_PIN
+};
+
+NewPing ping_sensors[] = {
+  NewPing(53, 51),
+  NewPing(49, 47),
+  NewPing(45, 43),
+  NewPing(35, 37),
+  NewPing(31, 33),
+  NewPing(27, 29),
+  NewPing(23, 25)
 };
 
 // Analog pins, for easy access in getPin
@@ -224,6 +241,9 @@ void processCommand(char cmd, float arg3_f, char* args) {
     case 's' : // Set servo position
       //Serial.println("s called");
       writeServoPosition(args, arg3_f);
+      break;
+    case 'p' : // Read Ping sensor
+      readPing(args);
       break;
   }
 }
@@ -356,7 +376,7 @@ void writePinAnalog(byte pinID, int output) {
 void playTone(byte pinID, int freq) {
   // Stop the tone as needed
   if (tonePin != 0) {
-    noTone(tonePin);
+    //noTone(tonePin);
     tonePin = 0;
   }
 
@@ -367,9 +387,9 @@ void playTone(byte pinID, int freq) {
   // Start the new tone, with appropriate duration
   tonePin = pinID;
   if (toneDuration == 0) {
-    tone(pinID, freq); 
+    //tone(pinID, freq); 
   } else {
-    tone(pinID, freq, toneDuration);
+    //tone(pinID, freq, toneDuration);
   }
 }
 //----------------------------------------------------------------------------
@@ -380,10 +400,50 @@ void writeServoPosition(char* args, float arg3_f) {
     constrain(arg3_f, 0, 180);
     switch(args[0]){
         case 'v':
-            v_servo.write(constrain(arg3_f + SERVO_V_CENTER, 0, 180));
+            v_servo.write(constrain(arg3_f + SERVO_V_CENTER, 20, 180));
             break;
         case 'h':
             h_servo.write(constrain(arg3_f + SERVO_H_CENTER, 0, 180));
             break;
     }
+}
+//----------------------------------------------------------------------------
+// readPing
+//----------------------------------------------------------------------------
+void readPing(char* args) {
+  int index = -1;
+  switch (args[0]) {
+    case 'f':
+      switch (args[1]) {
+        case 'r':
+          index = 6;
+          break;
+        case 'l':
+          index = 5;
+          break;
+      }
+      break;
+    case 'r':
+      index = 4;
+      break;
+    case 'l':
+      index = 3;
+      break;
+    case 'b':
+      switch (args[1]) {
+        case 'r':
+          index = 2;
+          break;
+        case 'l':
+          index = 1;
+          break;
+        case ' ':
+          index = 0;
+          break;
+      }
+      break;
+  }
+  if (index >= 0) {
+    Serial.println(ping_sensors[index].ping_cm());
+  }
 }

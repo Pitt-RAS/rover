@@ -2,7 +2,6 @@ import tornado.ioloop
 import tornado.web
 import tornado.websocket
 from tornado.websocket import websocket_connect
-
 import json
 import os
 import serial
@@ -21,6 +20,7 @@ open_threads = []
 # Messages needed to be processed
 messages = deque()
 
+
 #-----------------------------------------------------
 # cleanup
 # Shut everything down
@@ -32,6 +32,13 @@ def cleanup():
         thread.stop()
         thread.join()
 
+ping_sensor_distances = {'fl': -1, 'fr': -1, 'l': -1, 'r': -1, 'bl': -1, 'br': -1, 'b': -1}
+def update_ping_sensors():
+    print(ping_sensor_distances)
+    arduino_com.read_ping_sensors(ping_sensor_distances)
+    print('done pinging')
+    time.sleep(0.1)
+
 #-----------------------------------------------------
 # poll
 # Poll the stopable thread
@@ -41,10 +48,13 @@ def poll(ws):
         # Can't do anything if the websocket closed or the thread
         # has already been stopped
         if ws._closed or threading.current_thread().stopped():
+            print('socket was closed')
             break
         #ws.write_message(u'send_input')
         battery = arduino_com.read_battery()
+        update_ping_sensors()
         ws.write_message('{"type":"battery", "data":%f}'%battery);
+        ws.write_message('{"type": "ping_sensors", "data": %s}'%json.dumps(ping_sensor_distances))
         time.sleep(polling_time)
     # Thread is dead, remove
     open_threads.remove(threading.current_thread())
@@ -95,7 +105,7 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
     #-----------------------------------------------------
     def open(self):
         self._closed = False
-        print('Websocket Opened')
+        #print('Websocket Opened')
         new_thread = StoppableThread(target = poll, args = (self,))
         open_threads.append(new_thread)
         new_thread.start()
@@ -117,7 +127,7 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
             # The left and right sets of wheels will always move in the same direction.
             # If a specific wheel needs to be addressed instead, use mfl or mbl
             # Write the values to the arduino
-            # print('writing some velocity or something')
+            # #print('writing some velocity or something')
             arduino_com.controlMotors(wheels, self.throttle)
 
         # Slider used to adjust throttle for all motors
@@ -127,8 +137,9 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
         if (msg.has_key('Tilt')):
             orientation = msg['Tilt']
             arduino_com.v_servo_write(orientation[2])
+            print orientation
             arduino_com.h_servo_write(orientation[3])
-
+        print('released lock')
     #-----------------------------------------------------
     # check_origin
     # Set to true to allow all cross-origin traffic
@@ -147,6 +158,7 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
 # Program starts here
 #-----------------------------------------------------
 if __name__ == '__main__':
+    print('Entered main')
     # Start the websocket
     application = tornado.web.Application([
         (r'/keysocket', KeyPressHandler),
@@ -156,11 +168,12 @@ if __name__ == '__main__':
     # arduino_serial = serial.Serial('/dev/ttyACM0', 115200);
     
     # Time in between thread polling
-    polling_time = 0.1
+    polling_time = 0.3
 
     #conn = websocket_connect('ws://aftersomemath.com:8888/rover', on_message_callback = data_received)
-
+    print('Starting port')
     application.listen(8080)
+    print('Started port')
     try:
         tornado.ioloop.IOLoop.instance().start()
     except KeyboardInterrupt:
