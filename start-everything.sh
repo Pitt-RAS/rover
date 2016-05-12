@@ -69,9 +69,10 @@ if [ -z "${PID1}" ] || [ -z "${PID2}" ]; then
 
     #uvcdynctrl -v -d video1 --set="Focus, Auto" 0
     #uvcdynctrl -v -d video${COUNTER} --set="Focus, Auto" 0
-
+    echo "/dev/video0"
     ./mjpg-streamer.sh stop /dev/video0 8081
     ./mjpg-streamer.sh start /dev/video0 8081
+    echo "/dev/video1"
     ./mjpg-streamer.sh stop /dev/video1 8082
     ./mjpg-streamer.sh start /dev/video1 8082
     uvcdynctrl -v -d video0 --set="Focus, Auto" 0
