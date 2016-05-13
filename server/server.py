@@ -136,9 +136,9 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
         # Tilt used to adjust camera position
         if (msg.has_key('Tilt')):
             orientation = msg['Tilt']
-            arduino_com.v_servo_write(orientation[3])
+            arduino_com.v_servo_write(orientation[1])
             print orientation
-            arduino_com.h_servo_write(orientation[1])
+            arduino_com.h_servo_write(orientation[0])
         #print('released lock')
     #-----------------------------------------------------
     # check_origin
