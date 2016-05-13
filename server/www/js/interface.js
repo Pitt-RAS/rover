@@ -23,7 +23,6 @@ $(document).ready(function() {
     webSock.onmessage = getData;
   
     document.getElementById ("SwapEyes").addEventListener ("click", swapEyes, false);
-    document.getElementById ("RecalibrateTilt").addEventListener("click", function(){needRecalibrateTilt = true;}, false);
 
     var tiltDot = null;
     var tiltRadar = null;
