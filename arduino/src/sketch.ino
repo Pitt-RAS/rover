@@ -91,7 +91,9 @@
 
 // Servo Center
 #define SERVO_V_CENTER 90
-#define SERVO_H_CENTER 100
+#define SERVO_H_CENTER 90
+
+#define SERVO_SPEED 60.0/1000.0 //In degrees a millisecond
 
 // Buffer for serial input
 byte input_buffer[INPUT_BUFFER_SIZE];
@@ -128,6 +130,8 @@ byte aPins[] = {A0, A1 ,A2, A3, A4, A5, A6, A7};
 
 // Servo objects one for horizontal and vertical axis
 Servo h_servo, v_servo;  // create servo object to control a servo
+float h_servo_pos, h_servo_pos_current;
+float v_servo_pos, v_servo_pos_current;
 
 //----------------------------------------------------------------------------
 // setup
@@ -148,6 +152,10 @@ void setup() {
   //Write initial position, should be centered
   h_servo.write(SERVO_H_CENTER);
   v_servo.write(SERVO_V_CENTER);
+  h_servo_pos = SERVO_H_CENTER;
+  h_servo_pos_current = SERVO_H_CENTER;
+  v_servo_pos = SERVO_V_CENTER;
+  v_servo_pos_current = SERVO_V_CENTER;
   
 }
 
@@ -203,6 +211,19 @@ void loop() {
       }
     }
   }
+  
+  // Handle moving the servos
+  static long time_since_update = millis();
+  long temp_time = millis();
+  long delta_t = temp_time - time_since_update;
+  time_since_update = temp_time;
+  
+  v_servo_pos_current += constrain(v_servo_pos-v_servo_pos_current, -1, 1) * ((float)delta_t * (float)SERVO_SPEED);
+  h_servo_pos_current += constrain(h_servo_pos-h_servo_pos_current, -1, 1) * ((float)delta_t * (float)SERVO_SPEED);
+
+  v_servo.write(v_servo_pos_current);
+  h_servo.write(h_servo_pos_current);  
+  
 }
 
 //----------------------------------------------------------------------------
@@ -400,10 +421,10 @@ void writeServoPosition(char* args, float arg3_f) {
     constrain(arg3_f, 0, 180);
     switch(args[0]){
         case 'v':
-            v_servo.write(constrain(arg3_f + SERVO_V_CENTER, 20, 180));
+            v_servo_pos = constrain(arg3_f + SERVO_V_CENTER, 20, 180);
             break;
         case 'h':
-            h_servo.write(constrain(arg3_f + SERVO_H_CENTER, 0, 180));
+            h_servo_pos = constrain(arg3_f + SERVO_H_CENTER, 0, 180);
             break;
     }
 }

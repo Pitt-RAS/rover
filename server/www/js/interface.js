@@ -66,19 +66,19 @@ $(document).ready(function() {
             switch (e.keyCode){
                 case 87: // W
                     // Increase Gamma by 1
-                    increaseRotation(2,rotationSpeed,90);
+                    increaseRotation(3,rotationSpeed,90);
                     break;
                 case 83: // S
                     // Decrease Gamma by 1
-                    increaseRotation(2,-rotationSpeed,90);
+                    increaseRotation(3,-rotationSpeed,90);
                     break;
                 case 65: // A
                     // Increase Alpha by 1
-                    increaseRotation(3,rotationSpeed,180);
+                    increaseRotation(1,rotationSpeed,180);
                     break;
                 case 68: // D
                     // Decrease Alpha by 1
-                    increaseRotation(3,-rotationSpeed,180);
+                    increaseRotation(1,-rotationSpeed,180);
                     break;
             }
         }
