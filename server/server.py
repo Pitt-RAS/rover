@@ -34,9 +34,9 @@ def cleanup():
 
 ping_sensor_distances = {'fl': -1, 'fr': -1, 'l': -1, 'r': -1, 'bl': -1, 'br': -1, 'b': -1}
 def update_ping_sensors():
-    print(ping_sensor_distances)
+    #print(ping_sensor_distances)
     arduino_com.read_ping_sensors(ping_sensor_distances)
-    print('done pinging')
+    #print('done pinging')
     time.sleep(0.1)
 
 #-----------------------------------------------------
@@ -115,7 +115,7 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
     # Handles input from the app
     #-----------------------------------------------------
     def on_message(self, message):
-        print("received message")
+        #print("received message")
         msg = json.loads(message)
         # Arrow key input for motors
         if (msg.has_key('Keys')):
@@ -136,10 +136,10 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
         # Tilt used to adjust camera position
         if (msg.has_key('Tilt')):
             orientation = msg['Tilt']
-            arduino_com.v_servo_write(orientation[2])
+            arduino_com.v_servo_write(orientation[3])
             print orientation
-            arduino_com.h_servo_write(orientation[3])
-        print('released lock')
+            arduino_com.h_servo_write(orientation[1])
+        #print('released lock')
     #-----------------------------------------------------
     # check_origin
     # Set to true to allow all cross-origin traffic

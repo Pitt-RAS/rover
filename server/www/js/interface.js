@@ -147,41 +147,33 @@ $(document).ready(function() {
       var a = Math.round(e.alpha); // Left and Right
       var b = Math.round(e.beta);
       var g = Math.round(e.gamma);// Up and down
-	  // Normalize all values using the calibration values
-	  //g = setRotation(2,g - tiltCalibration[3],90);
+	  // Fix alpha so it doesn't jump
+	  if(a > 180)
+	  {
+		  a -= 360;
+	  }
+	  
+	  a = a > 50 ? 50 : a;
+	  a = a < -50 ? -50 : a;
 	  // Fix gamma so it doesn't jump
-	  var inv_g = (g < 0 ? 180 : 0);
-	  //if (g > 0){
-	  //  g -= 90;
-	  //}else{
-	  //  g += 90;
-	  //}
-	  //g -= (tiltCalibration[3] + 90);
-	  //if (g < -90){
-	  //  g  += 180;
-	  //}else if (g > 90) {
-	  //  g -= 180;
-	  //}
-      if (g <= 0) {
-          g = 90 - g;
-      } else {
-          g = -90 - g;
-      }
-      g -= tiltCalibration[3];
-	  //a = setRotation(3,a - tiltCalibration[1],180);
-	  a -= (tiltCalibration[1]/* + inv_g*/);
-	  //if (a < 0){
-	  //  a += 360;
-	  //}
-	  b = 0;
-	  ab = 0;
+	  if(g < 0){
+		  g+=180;
+	  }
+	  
+	  g -= 90;
+	  g = g > 50 ? 50 : g;
+	  g = g < -50 ? -50 : g;
+      //g -= tiltCalibration[3];
+	  //a -= (tiltCalibration[1]/* + inv_g*/);
+	  //b = 0;
+	  //ab = 0;
 	  $('#rotAlpha').text(a);
 	  $('#rotBeta').text(b);
 	  $('#rotGamma').text(g);
       var newOrientation = ab + a + b + g;
       // Check to see if we need to update anything
       if (Math.abs(newOrientation - orientation[4]) > 1){
-        orientation = [ab, a, g, b, newOrientation];
+        orientation = [0, a, 0, g, 0];
         sendData();
       }
       
