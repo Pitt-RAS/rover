@@ -10,13 +10,17 @@ function get_pid {
 
 function stop {
 get_pid
-if [ -z "${PID1}" ] || [ -z "${PID2}" ]; then
-    echo "server is not running."
-    exit 1
+if [ -z "${PID1}" ]; then
+   echo "web server is not running"
 else
-    echo -n "Halting server..."
-    sudo kill -SIGKILL $PID1
+   echo "killing webserver"
+   sudo kill -SIGKILL $PID1
+fi
 
+if [ -z "${PID2}" ]; then
+    echo "cameras are not running."
+else
+    echo "halting cameras"
     cd /home/pi/rover/mjpg-streamer
     COUNTER=-1
 
