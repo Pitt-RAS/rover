@@ -18,16 +18,20 @@ var RobotMotion = {
     RIGHT: false,
 }
 
+var tiltDot;
+
 $(document).ready(function() {
     var webSock = new WebSocket("ws://192.168.2.115/keysocket");
     webSock.onmessage = getData;
   
-    document.getElementById ("SwapEyes").addEventListener ("click", swapEyes, false);
-
-    var tiltDot = null;
-    var tiltRadar = null;
-    var tiltRadarX = 0;
-    var tiltRadarY = 0;
+    if($('#SwapEyes').length > 0){
+        document.getElementById ("SwapEyes").addEventListener ("click", swapEyes, false);
+    }
+    
+    if ($('#TiltDot').length > 0) {
+            tiltDot = document.getElementById('TiltDot');
+            console.log(tiltDot);
+    }
     
     document.onkeydown = setKeyDown;
     document.onkeyup = setKeyUp;
@@ -36,7 +40,14 @@ $(document).ready(function() {
     if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) )
     {
         window.addEventListener("deviceorientation", updateOrientation, true);
-    }
+        
+        //Go full screen when clicked
+        addEventListener("click", function() {
+            var el = document.documentElement
+            , rfs = el.requestFullScreen || el.webkitRequestFullScreen || el.mozRequestFullScreen;
+            rfs.call(el);
+            });
+        }
     
     $('#fullscreen-button').click(toggleFullscreen);
     
@@ -225,15 +236,14 @@ $(document).ready(function() {
     // Updates the position of the tilt dot
     //---------------------------------------------
     function updateTiltDot(){
-        if (tiltDot == null || tiltRadar == null)
+        if( tiltDot != null)
         {
-            tiltDot = document.getElementById('TiltDot');
-            tiltRadar = document.getElementById('TiltDot');
+            console.log("updating");
+            tiltDot.style.left = (CamMotion.horizontal * (57 / 90)) + 'px';
+            tiltDot.style.top = (-CamMotion.vertical * (57 / 180)) + 'px';
+            $('#servo-vertical-angle').text(CamMotion.vertical);
+            $('#servo-horizontal-angle').text(CamMotion.horizontal);
         }
-        tiltDot.style.left = (CamMotion.horizontal * (57 / 90)) + 'px';
-        tiltDot.style.top = (-CamMotion.vertical * (57 / 180)) + 'px';
-        $('#servo-vertical-angle').text(CamMotion.vertical);
-        $('#servo-horizontal-angle').text(CamMotion.horizontal);
     }
 
     

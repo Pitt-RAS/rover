@@ -3,7 +3,6 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Rover Interface</title>
 
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <meta charset="utf-8">
@@ -20,26 +19,23 @@
     <!-- Custom styles for this template -->
     <link href="index_files/jumbotron.css" rel="stylesheet">
 
-    <!-- interface style sheet -->
+    <!-- mobile interface style sheet -->
     <link href="css/interface.css" rel="stylesheet">
 
 </head>
-<body>
-    <h1 class="interface-title">Rover Interface</h1>
-
-    <table class="interface-center"
-        <tr>
-            <td>
-                <img src="http://192.168.1.5:8081/?action=stream" id="EyeR">
-            </td>
-            <td>
-                <img src="http://192.168.1.5:8082/?action=stream" id="EyeL">
-            </td>
-        </tr>
-    </table>
-	<button id='SwapEyes'>Swap Eyes</button>
-	<button id="RecalibrateTilt">Recalibrate Tilt</button>
-    <a id='fullscreen-button' class='btn btn-default' role='button'>Fullscreen</a>
+<body class = "body-black">
+    <div class="fullscreen">
+        <table class="table-mobile">
+            <tr>
+                <td>
+                    <img src="http://192.168.2.115:8081/?action=stream" id="EyeR" class="mobile-images">
+                </td>
+                <td>
+                    <img src="http://192.168.2.115:8082/?action=stream" id="EyeL" class="mobile-images">
+                </td>
+            </tr>
+        </table>
+    </div>
 
     <!-- Bootstrap core JavaScript
         ================================================== -->
