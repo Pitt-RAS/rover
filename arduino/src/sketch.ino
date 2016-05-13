@@ -93,7 +93,7 @@
 #define SERVO_V_CENTER 90
 #define SERVO_H_CENTER 90
 
-#define SERVO_SPEED 60.0/1000.0 //In degrees a millisecond
+#define SERVO_SPEED 80.0/1000.0 //In degrees a millisecond
 
 // Buffer for serial input
 byte input_buffer[INPUT_BUFFER_SIZE];

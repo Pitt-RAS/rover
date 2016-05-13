@@ -147,26 +147,34 @@ $(document).ready(function() {
       var a = Math.round(e.alpha); // Left and Right
       var b = Math.round(e.beta);
       var g = Math.round(e.gamma);// Up and down
-	  // Fix alpha so it doesn't jump
-	  if(a > 180)
-	  {
-		  a -= 360;
-	  }
 	  
-	  a = a > 50 ? 50 : a;
-	  a = a < -50 ? -50 : a;
+	  // The below rules for fixing gamma and alpha were found by watching initial values and playing with the phone
 	  // Fix gamma so it doesn't jump
-	  if(g < 0){
+	  if(g < 0)
+	  {
 		  g+=180;
 	  }
 	  
 	  g -= 90;
-	  g = g > 50 ? 50 : g;
+	  g = g > 80 ? 80 : g;
 	  g = g < -50 ? -50 : g;
-      //g -= tiltCalibration[3];
-	  //a -= (tiltCalibration[1]/* + inv_g*/);
-	  //b = 0;
-	  //ab = 0;
+	  
+	  // Fix alpha so it doesn't jump
+	  // There are different rules if gamma is more than or less than 0
+	  if(g > 0)
+	  {
+	    a -= 180; 
+	  }
+	  else
+	  {
+		  if(a > 180)
+		  {
+			  a -= 360;
+		  }
+	  }
+	  a = a > 70 ? 70 : a;
+	  a = a < -70 ? -70 : a;
+	  
 	  $('#rotAlpha').text(a);
 	  $('#rotBeta').text(b);
 	  $('#rotGamma').text(g);
@@ -209,10 +217,10 @@ $(document).ready(function() {
     		//tiltRadarY = parseInt(tiltRadar.style.top);
     	}
     	tiltDot.style.left = (orientation[3] * (57 / 90)) + 'px';
-    	tiltDot.style.top = (orientation[2] * (57 / 180)) + 'px';
+    	tiltDot.style.top = (orientation[1] * (57 / 180)) + 'px';
     	//console.log(tiltDot.style.left);
-        $('#servo-vertical-angle').text(orientation[2]);
-        $('#servo-horizontal-angle').text(orientation[3]);
+        $('#servo-vertical-angle').text(orientation[3]);
+        $('#servo-horizontal-angle').text(orientation[1]);
     }
 
     //---------------------------------------------
