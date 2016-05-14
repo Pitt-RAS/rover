@@ -18,6 +18,8 @@
 // The number of byte size arguments
 #define ARGUMENTS 3
 
+#define MIN_PATTERN_DELAY 20
+
 enum Patterns 
         { 
           OFF = 'o',
@@ -56,6 +58,11 @@ void loop()
     memcpy(&arg, &input_buffer[ARGUMENTS + 1], 4);
     pattern_delay = (int) arg;
 
+    if(pattern_delay < MIN_PATTERN_DELAY)
+    {
+      pattern_delay = MIN_PATTERN_DELAY;
+    }
+
     pattern = (Patterns)input_buffer[0];
 
     for(int i = 0; i < ARGUMENTS; i++){
@@ -86,8 +93,29 @@ void runPattern(){
     case SOLID :
       pattern_solid();
       break;
+    case RAINBOW :
+      pattern_rainbow();
+      break;
   }
 }
+
+void pattern_rainbow()
+{
+  uint16_t i;
+  static uint16_t j = 0;
+
+  for(i=0; i<strip.numPixels(); i++) {
+    strip.setPixelColor(i, Wheel((i+j) & 255));
+  }
+  strip.show();
+
+  j++;
+  if(j > 255)
+  {
+    j = 0;
+  }
+}
+  
 
 void pattern_off()
 {
@@ -105,4 +133,21 @@ void pattern_solid()
     strip.setPixelColor(i, c);
   }
   strip.show();
+}
+
+
+// Take from Adafruits NeoPixel Library
+// Input a value 0 to 255 to get a color value.
+// The colours are a transition r - g - b - back to r.
+uint32_t Wheel(byte WheelPos) {
+  WheelPos = 255 - WheelPos;
+  if(WheelPos < 85) {
+    return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+  }
+  if(WheelPos < 170) {
+    WheelPos -= 85;
+    return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+  }
+  WheelPos -= 170;
+  return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
 }

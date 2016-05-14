@@ -26,4 +26,14 @@ def solid(r, g, b):
     arduino_serial.write(';')
     serialLock.release()
 
+def rainbow(delay):
+    serialLock.acquire()
+    arduino_serial.write(':')
+    arduino_serial.write('r' + chr(0) + chr(0) + chr(0))
+    for b in struct.pack('f', delay):
+        arduino_serial.write(b)
+    arduino_serial.write(';')
+    serialLock.release()
+
+
 arduino_serial = serial.Serial('/dev/ttyUSB0', 115200, timeout=1);

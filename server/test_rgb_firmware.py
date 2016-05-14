@@ -3,8 +3,10 @@ import time
 
 time.sleep(2)
 
+arduino_com_rgb.rainbow(50);
+
 while(1):
-    print("red")
+    '''print("red")
     arduino_com_rgb.solid(65, 0, 0)
     time.sleep(1)
     print("green")
@@ -12,4 +14,4 @@ while(1):
     time.sleep(1)
     print("off")
     arduino_com_rgb.off()
-    time.sleep(1)
+    time.sleep(1)'''
