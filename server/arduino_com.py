@@ -1,4 +1,5 @@
 import serial
+from serial import SerialException
 import struct
 import threading
 
@@ -9,62 +10,61 @@ serialLock = threading.Lock()
 #-----------------------------------------------------
 
 def v_servo_write(position):
-    #print("updating servo1: " + str(position))
-    serialLock.acquire()
-    arduino_serial.write('sv' + 'v') # extra v is dummy character
-    #The offset is because 120 degrees is actually 0 its constrained on the arduino
-    for b in struct.pack('f', position):
-        arduino_serial.write(b)
-    arduino_serial.write(':')
-    serialLock.release()
+    write_data('s', arguments='vv', number=position)
 
 def h_servo_write(position):
-    #print("updating servo2: " + str(position))
-    serialLock.acquire()
-    arduino_serial.write('sh' + 'h') #extra h is dummy character
-    #The offset is because 150 degrees is actually 0 its constrained on the arduino
-    for b in struct.pack('f', position):
-        arduino_serial.write(b)
-    arduino_serial.write(':')
-    serialLock.release()
+    write_data('s', arguments='hh', number=position)
     
 def controlMotors(wheels, throttle):
-    serialLock.acquire()
-    arduino_serial.write('mal')
-    for b in struct.pack('f', wheels[0] * throttle):
-        arduino_serial.write(b)
-    arduino_serial.write(':')
-    arduino_serial.write('mar')
-    for b in struct.pack('f', wheels[1] * throttle):
-        arduino_serial.write(b)
-    arduino_serial.write(':')
-    serialLock.release()
-    
-def read_battery():
-    serialLock.acquire()
-    arduino_serial.write('RA0')
-    for b in struct.pack('f', 0):
-        arduino_serial.write(b)
-    arduino_serial.write(':')
-    message = arduino_serial.readline()
-    serialLock.release()
-    #print(message)
-    voltage = ((int(message)/1024.0) * 5.13)
-    battery_voltage = voltage/0.3625
-    return battery_voltage
+    write_data('m', arguments='al', number=wheels[0] * throttle)
+    write_data('m', arguments='ar', number=wheels[1] * throttle)
 
+#this method needs to be refactored like the ones above but needs the communication protocol to change so
+#that the serial lock is not lost when reading in a return value    
+def read_battery():
+    try:
+        serialLock.acquire()
+        arduino_serial.write('RA0')
+        for b in struct.pack('f', 0):
+            arduino_serial.write(b)
+        arduino_serial.write(':')
+        message = arduino_serial.readline()
+        serialLock.release()
+        voltage = ((int(message)/1024.0) * 5.13)
+        battery_voltage = voltage/0.3625
+        return battery_voltage
+    except SerialException as e:
+        print "SerialException error({0}): {1}".format(e.errno, e.strerror)
+        return 99999
+
+#this method needs to be refactored like the ones above but needs the communication protocol to change so
+#that the serial lock is not lost when reading in a return value  
 #------------------------------------------------------
 # read_ping_sensors
 # reads ping sensor distances (in cm) for the sensors named in the given dictionary
 def read_ping_sensors(result):
-    serialLock.acquire()
-    for sensor in result:
-        arduino_serial.write('p')
-        arduino_serial.write(sensor.ljust(2))
-        for b in struct.pack('f', 0):
+    try:
+        serialLock.acquire()
+        for sensor in result:
+            arduino_serial.write('p')
+            arduino_serial.write(sensor.ljust(2))
+            for b in struct.pack('f', 0):
+                arduino_serial.write(b)
+            arduino_serial.write(':')
+            result[sensor] = float(arduino_serial.readline())
+        serialLock.release()
+    except SerialException as e:
+        print "SerialException error({0}): {1}".format(e.errno, e.strerror)
+
+def write_data(command, arguments='zz', number=0):
+    try:
+        serialLock.acquire()
+        arduino_serial.write(command + arguments)
+        for b in struct.pack('f', number):
             arduino_serial.write(b)
         arduino_serial.write(':')
-        result[sensor] = float(arduino_serial.readline())
-    serialLock.release()
+        serialLock.release()
+    except SerialException as e:
+        print "SerialException error({0}): {1}".format(e.errno, e.strerror)
 
 arduino_serial = serial.Serial('/dev/ttyACM0', 115200);
