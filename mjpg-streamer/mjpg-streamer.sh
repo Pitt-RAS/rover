@@ -1,7 +1,7 @@
 #!/bin/bash
 
 VIDEO_DEV="$2"
-FRAME_RATE="15"
+FRAME_RATE="5"
 RESOLUTION="640x480"
 PORT="$3"
 YUV="false"
