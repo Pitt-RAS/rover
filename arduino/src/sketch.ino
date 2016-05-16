@@ -63,15 +63,11 @@
 // ex; pbr0000:
 //----------------------------------------------------------------------------
 
+#include <Arduino.h>
+#include "PiCom.h"
 #include "NewPing.h"
 #include <Servo.h>
 
-// How many characters should be back-logged for the input buffer
-#define INPUT_BUFFER_SIZE 10
-// The character that separates individual commands
-#define COMMAND_SEPARATOR ':'
-// The number of bytes in a command
-#define COMMAND_SIZE 7
 // If a pin was previously used for OUTPUT, it cannot be swapped to INPUT and reverse
 #define STRICT_PINS true
 
@@ -95,10 +91,6 @@
 
 #define SERVO_SPEED 80.0/1000.0 //In degrees a millisecond
 
-// Buffer for serial input
-byte input_buffer[INPUT_BUFFER_SIZE];
-int input_buffer_size = 0;
-int input_buffer_head = 0;
 // Keep track if pins are set to INPUT or OUTPUT
 byte pinModes[30];
 // The last error raised
@@ -138,8 +130,8 @@ float v_servo_pos, v_servo_pos_current;
 // Runs once when the program starts
 //----------------------------------------------------------------------------
 void setup() {
-  // Start Serial
-  Serial.begin(115200);
+  // Start Serial Library
+  PiComInit();
 
   // Set the pin mode for each motor pin, and mark it for future reference
   for (int k = 0; k < 8; k++) {
@@ -156,7 +148,6 @@ void setup() {
   h_servo_pos_current = SERVO_H_CENTER;
   v_servo_pos = SERVO_V_CENTER;
   v_servo_pos_current = SERVO_V_CENTER;
-  
 }
 
 //----------------------------------------------------------------------------
@@ -164,52 +155,15 @@ void setup() {
 // Main program loop
 //----------------------------------------------------------------------------
 void loop() {
-  // get next byte from serial
-  int next_byte = Serial.read();
-
-  if (next_byte != -1) {
-    if ((byte)next_byte == COMMAND_SEPARATOR) {
-      if (input_buffer_size >= COMMAND_SIZE) {
-        // find beginning of last command
-        int command_start = input_buffer_head - COMMAND_SIZE;
-        command_start = (command_start + INPUT_BUFFER_SIZE) % INPUT_BUFFER_SIZE;
-
-        // copy command out of input buffer
-        byte command[COMMAND_SIZE];
-
-        int bytes_copied_from_end = min(INPUT_BUFFER_SIZE - command_start, COMMAND_SIZE);
-        memcpy(command, input_buffer + command_start, bytes_copied_from_end);
-        memcpy(command + bytes_copied_from_end, input_buffer, COMMAND_SIZE - bytes_copied_from_end);
-
-        /*Serial.write('S');
-        for (int i = 0; i < COMMAND_SIZE; i++) {
-            Serial.print(command[i], HEX);
-        }
-        Serial.write('E');
-        */
-        // process command
-        float arg;
-        memcpy(&arg, &command[3], 4);
-        /*Serial.print(*(unsigned long*)(&arg), HEX);
-        Serial.print("ag:");
-        Serial.print(arg);
-        Serial.print("end");*/
-        processCommand((char)command[0], arg, (char*)command + 1);
-      }
-
-      // clear input buffer
-      input_buffer_size = 0;
-      input_buffer_head = 0;
-
-    } else {
-      // put new character into input buffer
-      input_buffer[input_buffer_head] = (byte)next_byte;
-
-      input_buffer_head = (input_buffer_head + 1) % INPUT_BUFFER_SIZE;
-      if (input_buffer_size < INPUT_BUFFER_SIZE - 1) {
-        input_buffer_size++;
-      }
-    }
+  
+  //Check for new command
+  char command = 0;
+  float number = 0.0;
+  char arguments[kPiComArguments];
+    
+  if(PiComGetCommand(command, number, arguments))
+  {
+    processCommand(command, number, arguments);
   }
   
   // Handle moving the servos
@@ -234,9 +188,6 @@ void loop() {
 // args is a 2 character array of the two argument characters
 //----------------------------------------------------------------------------
 void processCommand(char cmd, float arg3_f, char* args) {
-  //Serial.print(cmd);
-  //Serial.print(' ' + args + ' ');
-  //Serial.println(arg3_f);
   switch (cmd) {
     case 'm' : // Motor Speed Command
       runMotorCommand(arg3_f, args[0], args[1]);
@@ -273,6 +224,7 @@ void processCommand(char cmd, float arg3_f, char* args) {
 // Figure out which wheels to turn on
 //----------------------------------------------------------------------------
 void runMotorCommand(float mspeed, char arg1, char arg2) {
+
   // We have 4 unique instruction 'positions'
   // This accounts for the 'a' parameter in each of the arguments
   boolean shouldSetMotors[] = {
@@ -297,6 +249,7 @@ void runMotorCommand(float mspeed, char arg1, char arg2) {
 // Provides an error if pin has already been decided on
 //----------------------------------------------------------------------------
 boolean applyPinType(byte pinID, byte type) {
+  
   return true;
   if (pinModes[pinID] == type + 1) {
     return true;
@@ -319,6 +272,7 @@ boolean applyPinType(byte pinID, byte type) {
 // Works for pins labeled A and such as well.
 //----------------------------------------------------------------------------
 byte getPin(char pin[]) {
+  //Acknowledge that the command was successfully received
   if (pin[0] == 'A') {
     return aPins[atoi(pin + 1)]; 
   }
@@ -330,6 +284,7 @@ byte getPin(char pin[]) {
 // Sets one of the pre-defined motors to a particular speed
 //----------------------------------------------------------------------------
 void writeMotorSpeed(float mspeed, byte pwm_pin, byte gpio_pin) {
+
   if (mspeed >= 0) {
     digitalWrite(gpio_pin, 0);
     analogWrite(pwm_pin, mspeed * 255);
@@ -347,7 +302,7 @@ void readPinDigital(byte pinID) {
   // Check if pin type set to read
   if (applyPinType(pinID, INPUT)) {
     // Read the pin
-    Serial.println(digitalRead(pinID));
+    //Serial.println(digitalRead(pinID));
   }
 }
 
@@ -356,6 +311,7 @@ void readPinDigital(byte pinID) {
 // Writes a value to a particular pin
 //----------------------------------------------------------------------------
 void writePinDigital(byte pinID, int output) {
+
   // Check if pin type set to write
   if (applyPinType(pinID, OUTPUT)) {
     // Write to the pin
@@ -371,7 +327,7 @@ void readPinAnalog(byte pinID) {
   // Check if pin type set to read
   if (applyPinType(pinID, INPUT)) {
     // Read the pin
-    Serial.println(analogRead(pinID));
+    PiComSendData((uint16_t)analogRead(pinID));
   }
 }
 
@@ -382,6 +338,7 @@ void readPinAnalog(byte pinID) {
 // value being the duty cycle. If you want to specify frequency, use playTone
 //----------------------------------------------------------------------------
 void writePinAnalog(byte pinID, int output) {
+
   // When writing, you do not need to set the pin type to output,
   // However, strict mode should prevent us from doing anything
   if (applyPinType(pinID, OUTPUT)) {
@@ -395,6 +352,7 @@ void writePinAnalog(byte pinID, int output) {
 // Plays a tone at a specified frequency on a pin
 //----------------------------------------------------------------------------
 void playTone(byte pinID, int freq) {
+  
   // Stop the tone as needed
   if (tonePin != 0) {
     //noTone(tonePin);
@@ -418,15 +376,16 @@ void playTone(byte pinID, int freq) {
 // write a position to a servo
 //----------------------------------------------------------------------------
 void writeServoPosition(char* args, float arg3_f) {
-    constrain(arg3_f, 0, 180);
-    switch(args[0]){
-        case 'v':
-            v_servo_pos = constrain(SERVO_V_CENTER - arg3_f, 20, 180);
-            break;
-        case 'h':
-            h_servo_pos = constrain(SERVO_H_CENTER + arg3_f, 0, 180);
-            break;
-    }
+
+  constrain(arg3_f, 0, 180);
+  switch(args[0]){
+    case 'v':
+      v_servo_pos = constrain(SERVO_V_CENTER - arg3_f, 20, 180);
+      break;
+    case 'h':
+      h_servo_pos = constrain(SERVO_H_CENTER + arg3_f, 0, 180);
+      break;
+  }
 }
 //----------------------------------------------------------------------------
 // readPing
@@ -465,6 +424,7 @@ void readPing(char* args) {
       break;
   }
   if (index >= 0) {
-    Serial.println(ping_sensors[index].ping_cm());
+    PiComSendData(0.0f);
+    //PiComSendData((float)ping_sensors[index].ping_cm());
   }
 }
