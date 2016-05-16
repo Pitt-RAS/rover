@@ -421,10 +421,10 @@ void writeServoPosition(char* args, float arg3_f) {
     constrain(arg3_f, 0, 180);
     switch(args[0]){
         case 'v':
-            v_servo_pos = constrain(arg3_f + SERVO_V_CENTER, 20, 180);
+            v_servo_pos = constrain(SERVO_V_CENTER - arg3_f, 20, 180);
             break;
         case 'h':
-            h_servo_pos = constrain(arg3_f + SERVO_H_CENTER, 0, 180);
+            h_servo_pos = constrain(SERVO_H_CENTER + arg3_f, 0, 180);
             break;
     }
 }
