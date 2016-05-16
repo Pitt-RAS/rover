@@ -8,7 +8,7 @@
 #define PIXEL_COUNT 144
 
 // How many characters should be back-logged for the input buffer
-#define INPUT_BUFFER_SIZE 10
+#define INPUT_BUFFER_SIZE 20
 // The character that separates individual commands
 #define COMMAND_BEGINNER ':'
 // The character that separates individual commands
@@ -18,7 +18,7 @@
 // The number of byte size arguments
 #define ARGUMENTS 3
 
-#define MIN_PATTERN_DELAY 20
+#define MIN_PATTERN_DELAY 5
 
 enum Patterns 
         { 
@@ -51,7 +51,7 @@ void loop()
   if((char)Serial.read() == COMMAND_BEGINNER) //The beginning character
   {
     //Read up to the end of the command
-    Serial.readBytesUntil(COMMAND_ENDER, input_buffer, 100);
+    Serial.readBytesUntil(COMMAND_ENDER, input_buffer, INPUT_BUFFER_SIZE);
     
     //Parse the command
     float arg;
