@@ -66,7 +66,7 @@
 #include <Arduino.h>
 #include "PiCom.h"
 #include "NewPing.h"
-#include <Servo.h>
+#include "Adafruit_TiCoServo.h"
 
 // If a pin was previously used for OUTPUT, it cannot be swapped to INPUT and reverse
 #define STRICT_PINS true
@@ -89,7 +89,7 @@
 #define SERVO_V_CENTER 90
 #define SERVO_H_CENTER 90
 
-#define SERVO_SPEED 80.0/1000.0 //In degrees a millisecond
+#define SERVO_SPEED 150.0/1000.0 //In degrees a millisecond
 
 // Keep track if pins are set to INPUT or OUTPUT
 byte pinModes[30];
@@ -121,7 +121,7 @@ NewPing ping_sensors[] = {
 byte aPins[] = {A0, A1 ,A2, A3, A4, A5, A6, A7};
 
 // Servo objects one for horizontal and vertical axis
-Servo h_servo, v_servo;  // create servo object to control a servo
+Adafruit_TiCoServo  h_servo, v_servo;  // create servo object to control a servo
 float h_servo_pos, h_servo_pos_current;
 float v_servo_pos, v_servo_pos_current;
 
@@ -148,6 +148,8 @@ void setup() {
   h_servo_pos_current = SERVO_H_CENTER;
   v_servo_pos = SERVO_V_CENTER;
   v_servo_pos_current = SERVO_V_CENTER;
+  
+  
 }
 
 //----------------------------------------------------------------------------
