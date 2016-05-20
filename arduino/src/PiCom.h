@@ -14,7 +14,7 @@
 static const long kPiComBaudRate = 115200;
 
 // The amount of arguments in a command
-static const int kPiComArguments = 2;
+static const int kPiComArguments = 4;
 
 // The character that begins individual commands
 static const char kPiComCommandBegin = ':';

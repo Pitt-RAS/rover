@@ -177,6 +177,7 @@ if __name__ == '__main__':
     
     print('Started Arduino Com')
     arduino_com.init()
+    arduino_com.led_chasers(0, 128, 0, 10)
     
     try:
         tornado.ioloop.IOLoop.instance().start()
