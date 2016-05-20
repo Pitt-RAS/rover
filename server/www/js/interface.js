@@ -5,7 +5,7 @@ var CamMotion = {
   RIGHT: false,
   vertical: 0,
   horizontal: 0,
-  rotationSpeed: (80.0/1000.0) * 50.0, // 80 degrees per second / (S/mS) * (50mS)
+  rotationSpeed: (150.0/1000.0) * 50.0, // 80 degrees per second / (S/mS) * (50mS)
   verticalMax: 80,
   verticalMin: -50,
   horizontalMax: 70, //Only Need one horizontal max because rotation is equal on the left and right
@@ -19,6 +19,8 @@ var RobotMotion = {
 }
 
 var tiltDot;
+
+var timeOfLastMessage = 0;
 
 $(document).ready(function() {
     var webSock = new WebSocket("ws://192.168.2.115/keysocket");
@@ -58,6 +60,8 @@ $(document).ready(function() {
     //---------------------------------------------
     function cameraUpdateOrientation()
     {
+      if(CamMotion.UP || CamMotion.DOWN || CamMotion.RIGHT || CamMotion.LEFT)
+      {
         if(CamMotion.UP)
         {
             CamMotion.vertical += CamMotion.rotationSpeed;
@@ -82,6 +86,7 @@ $(document).ready(function() {
         updateTiltDot();
         // Send new info only if the last packet hasn't been sent, helps with slow connections
         safeSendData();
+      }
     }
     //---------------------------------------------
     // getData
@@ -89,6 +94,7 @@ $(document).ready(function() {
     //---------------------------------------------
     function getData (event) {
         var msg = JSON.parse(event.data);
+        console.log(msg);
         // We can select specific JSON groups by using msg.name, where JSON contains "name":x
         // Every type MUST have msg.type to determine what else is pulled from it
         switch (msg.type){
@@ -141,7 +147,7 @@ $(document).ready(function() {
         }
         
         // Send immediately because we have to send motor events
-        sendData();
+        safeSendData();
     }
     
     //---------------------------------------------
@@ -253,8 +259,11 @@ $(document).ready(function() {
     // Only if it should not be sent when something else is sending
     //---------------------------------------------
     function safeSendData(){
-        if(webSock.bufferedAmount == 0)
+      
+         var date = new Date();
+        if(webSock.bufferedAmount == 0 && ((date.getTime() - timeOfLastMessage) > 100))
         {
+            timeOfLastMessage = date.getTime();
             sendData();
         }
     }
