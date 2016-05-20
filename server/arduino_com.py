@@ -5,6 +5,7 @@ import threading
 from time import sleep
 
 serialLock = threading.Lock()
+numArguments = 4
 
 def init():
   sleep(2) #make the arduino had time to come online
@@ -42,10 +43,35 @@ def read_ping_sensors(result):
     for sensor in result:
         result[sensor] = send_command('p', arguments=sensor.ljust(2), results=4, dType = 'f')
 
-def send_command(command, arguments='zz', number=0, results=0, dType = 'c'):
+        
+def led_rainbow(period):
+  send_command('l', arguments="r", number=period)
+  
+def led_solid(r, g, b):
+  color = pack_bytes([r, g, b])
+  send_command('l', arguments='s' + color)
+  
+def led_off():
+  send_command('l', arguments="o")
+  
+def led_chasers(r, g, b, period):
+  color = pack_bytes([r, g, b])
+  send_command('l', arguments = 'c' + color, number=period)
+
+def pack_bytes(list):
+  string = ""
+  for c in list:
+    string = string + chr(c)
+  return string
+
+def send_command(command, arguments="", number=0, results=0, dType = 'c'):
     try:
         serialLock.acquire()
         
+        if isinstance(arguments, list):
+          arguments = " ".join(chr, arguments)
+                  
+        arguments = arguments.ljust(numArguments)
         handshake()
         write_data(command, arguments, number)
         return_data = read_data(results, dType)

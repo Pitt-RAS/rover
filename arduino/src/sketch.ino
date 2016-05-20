@@ -67,7 +67,8 @@
 #include "PiCom.h"
 #include "NewPing.h"
 #include "Adafruit_TiCoServo.h"
-
+#include "Adafruit_NeoPixel.h"
+#include "NeoPixelController.h"
 // If a pin was previously used for OUTPUT, it cannot be swapped to INPUT and reverse
 #define STRICT_PINS true
 
@@ -88,6 +89,10 @@
 // Servo Center
 #define SERVO_V_CENTER 90
 #define SERVO_H_CENTER 90
+
+// LED's
+#define RGB_LEDS 98
+#define RGB_PIN 41
 
 #define SERVO_SPEED 150.0/1000.0 //In degrees a millisecond
 
@@ -125,12 +130,16 @@ Adafruit_TiCoServo  h_servo, v_servo;  // create servo object to control a servo
 float h_servo_pos, h_servo_pos_current;
 float v_servo_pos, v_servo_pos_current;
 
+NeoPixelController led_strip(RGB_LEDS, RGB_PIN);
+
 //----------------------------------------------------------------------------
 // setup
 // Runs once when the program starts
 //----------------------------------------------------------------------------
 void setup() {
-  // Start Serial Library
+  
+  led_strip.begin();
+  
   PiComInit();
 
   // Set the pin mode for each motor pin, and mark it for future reference
@@ -148,8 +157,6 @@ void setup() {
   h_servo_pos_current = SERVO_H_CENTER;
   v_servo_pos = SERVO_V_CENTER;
   v_servo_pos_current = SERVO_V_CENTER;
-  
-  
 }
 
 //----------------------------------------------------------------------------
@@ -179,6 +186,8 @@ void loop() {
 
   v_servo.write(v_servo_pos_current);
   h_servo.write(h_servo_pos_current);  
+  
+  led_strip.update();
   
 }
 
@@ -218,6 +227,22 @@ void processCommand(char cmd, float arg3_f, char* args) {
       break;
     case 'p' : // Read Ping sensor
       readPing(args);
+      break;
+    case 'l' : // Led command
+      switch (args[0])
+      {
+        case 'o' :
+          led_strip.setPattern(NeoPixelController::PATTERN_OFF, 1000, 0, 0, 0);
+          break;
+        case 's' :
+          led_strip.setPattern(NeoPixelController::PATTERN_SOLID, 1000, args[1], args[2], args[3]);
+          break;
+        case 'r' :
+          led_strip.setPattern(NeoPixelController::PATTERN_RAINBOW, arg3_f, args[1], args[2], args[3]);
+          break;
+        case 'c' :
+          led_strip.setPattern(NeoPixelController::PATTERN_CHASER, arg3_f, args[1], args[2], args[3]);
+      }
       break;
   }
 }
