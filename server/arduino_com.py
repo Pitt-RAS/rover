@@ -106,6 +106,5 @@ def handshake():
   while(success != "go"):
     arduino_serial.write(':')
     success = arduino_serial.readline().rstrip()
-    #print(success)
 
 arduino_serial = serial.Serial('/dev/ttyACM0', 115200, timeout=0.5)

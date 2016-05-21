@@ -115,13 +115,12 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
     # Handles input from the app
     #-----------------------------------------------------
     def on_message(self, message):
-        #print("received message")
+
         msg = json.loads(message)
         # Arrow key input for motors
         if (msg.has_key('Velocity')):
             velocities = msg['Velocity']
             arduino_com.controlMotors(velocities[0], velocities[1])
-            print(velocities)
 
         # Slider used to adjust throttle for all motors
         if (msg.has_key('Thr')):
@@ -131,7 +130,6 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
             orientation = msg['Tilt']
             arduino_com.v_servo_write(orientation[1])
             arduino_com.h_servo_write(orientation[0])
-        #print('released lock')
     #-----------------------------------------------------
     # check_origin
     # Set to true to allow all cross-origin traffic

@@ -154,7 +154,7 @@ void setup() {
   
   PiComInit();
   
-  Serial1.begin(115200);
+  Serial1.begin(115200); //For streaming debug info to another arduino that prints it on the screen
 
   // Set the pin mode for each motor pin, and mark it for future reference
   for (int k = 0; k < 8; k++) {
@@ -204,61 +204,6 @@ void loop() {
 }
 
 //----------------------------------------------------------------------------
-// processCommand
-// Switch off to the different specified functions
-// cmd is the first character of the command, it signifies while case statement will execute
-// arg3_f floating point payload
-// args is a 2 character array of the two argument characters
-//----------------------------------------------------------------------------
-/*void processCommand(char cmd, float arg3_f, char* args) {
-  switch (cmd) {
-    case 'm' : // Motor Speed Command
-      runMotorCommand(arg3_f, args[0], args[1]);
-      break;
-    case 'r' : // Read Pin Digital
-      readPinDigital(getPin(args));
-      break;
-    case 'w' : // Write Pin Digital
-      writePinDigital(getPin(args), (arg3_f == 0 ? LOW : HIGH));
-      break;
-    case 'R' : // Read Pin Analog
-      readPinAnalog(getPin(args));
-      break;
-    case 'W' : // Write Pin Analog
-      writePinDigital(getPin(args), ((int) arg3_f) % 256);
-      break;
-    case 'T' : // Play tone
-      playTone(getPin(args), (int) arg3_f);
-      break;
-    case 't' : // Set tone duration
-      toneDuration = (int) arg3_f;
-      break;
-    case 's' : // Set servo position
-      //Serial.println("s called");
-      writeServoPosition(args, arg3_f);
-      break;
-    case 'p' : // Read Ping sensor
-      readPing(args);
-      break;
-    case 'l' : // Led command
-      switch (args[0])
-      {
-        case 'o' :
-          led_strip.setPattern(NeoPixelController::PATTERN_OFF, 1000, 0, 0, 0);
-          break;
-        case 's' :
-          led_strip.setPattern(NeoPixelController::PATTERN_SOLID, 1000, args[1], args[2], args[3]);
-          break;
-        case 'r' :
-          led_strip.setPattern(NeoPixelController::PATTERN_RAINBOW, arg3_f, args[1], args[2], args[3]);
-          break;
-        case 'c' :
-          led_strip.setPattern(NeoPixelController::PATTERN_CHASER, arg3_f, args[1], args[2], args[3]);
-      }
-      break;
-  }
-}*/
-//----------------------------------------------------------------------------
 // runMotorCommand
 // Figure out which wheels to turn on
 //----------------------------------------------------------------------------
@@ -269,9 +214,7 @@ void runMotorCommand(uint8_t* command) {
     
   int pwml = (forwardPercent + rotationPercent) * 255 / 100; // Forward plus rotation on that side
   int pwmr = (forwardPercent - rotationPercent) * 255 / 100; // Forward minus rotation, no need to subtract because the motor is on the other side of the robot
-  
-  Serial1.println(pwmr);
-  
+    
   // Front Left
   if(pwml >= 0){ // Forward
     digitalWrite(MOTOR_FL_GPIO_PIN, LOW);
@@ -312,7 +255,6 @@ void runMotorCommand(uint8_t* command) {
     analogWrite(MOTOR_BR_PWM_PIN, 255 + pwmr);
   }
   
-  
 }
 //----------------------------------------------------------------------------
 // applyPinType
@@ -329,11 +271,7 @@ boolean applyPinType(byte pinID, byte type) {
     pinMode(pinID, type);
     return true;
   }
-  // Pin has already been set to a different type, and strict pins is enabled.
-  // Raise an error, and don't allow the command to complete
-  //sprintf(errorReport, "Pin %i is %s", pinID, (pinModes[pinID] == OUTPUT + 1 ? "OUTPUT" : "INPUT"));
-  //Serial.println("-1");
-  //Serial.println(errorReport);
+  
   return false;
 }
 
@@ -348,21 +286,6 @@ byte getPin(char pin[]) {
     return aPins[atoi(pin + 1)]; 
   }
   return atoi(pin);
-}
-
-//----------------------------------------------------------------------------
-// writeMotorSpeed
-// Sets one of the pre-defined motors to a particular speed
-//----------------------------------------------------------------------------
-void writeMotorSpeed(float mspeed, byte pwm_pin, byte gpio_pin) {
-
-  if (mspeed >= 0) {
-    digitalWrite(gpio_pin, 0);
-    analogWrite(pwm_pin, mspeed * 255);
-  } else {
-    digitalWrite(gpio_pin, 1);
-    analogWrite(pwm_pin, (1 + mspeed) * 255);
-  }
 }
 
 //----------------------------------------------------------------------------
