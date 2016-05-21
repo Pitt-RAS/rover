@@ -27,7 +27,7 @@ static const char kPiComCommandEnd = ';';
 static const int kPiComCommandTimeout = 500;
 
 // Command Size in bytes
-static const int kPiCommandSize = 1 + 4 + kPiComArguments; //1 command, 1 four byte float, arguments
+static const int kPiCommandSize = 255; //1 command, 1 four byte float, arguments
 
 // Buffer for serial input
 extern char input_buffer[kPiComBufferSize];
@@ -35,8 +35,11 @@ extern char input_buffer[kPiComBufferSize];
 // Initialize the library
 void PiComInit(void);
 
+// Wait for a byte
+char PiComReadByte(void);
+
 // Get a new command
-boolean PiComGetCommand(char& command, float& number, char* arguments);
+boolean PiComGetData(char* data);
 
 // Send some data in response
 void PiComSendData(char data);

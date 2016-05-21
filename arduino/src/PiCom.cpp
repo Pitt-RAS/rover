@@ -8,7 +8,7 @@ void PiComInit()
     Serial.begin(kPiComBaudRate);
 }
 
-boolean PiComGetCommand(char& command, float& number, char* arguments)
+boolean PiComGetData(char* data)
 {
 
   long time = millis();
@@ -21,28 +21,30 @@ boolean PiComGetCommand(char& command, float& number, char* arguments)
     if(character == ':') //The beginning character
     {
       Serial.println("go");
+      
+      char packetSize = PiComReadByte(); //First byte after handshake is the packet size including command
+            
+      int bytes = Serial.readBytes(data, packetSize);
 
-      int read = Serial.readBytesUntil(kPiComCommandEnd, input_buffer, kPiComBufferSize);
-
-      //Success!
-      if(read == kPiCommandSize){
-        command = input_buffer[0];
-        memcpy(arguments, &input_buffer[1], kPiComArguments);
-        memcpy(&number, &input_buffer[kPiComArguments + 1], 4);
+      if(bytes == packetSize)
+      {
         Serial.println("ok");
         return true;
       }
-      else
-      {
-        Serial.println("no");
-        time = millis(); //Reset the timeout so we don't timeout in the middle of this
-      }
       
+      Serial.println("no");
     }
   }
 
   //We timed out while being streamed bad data
   return false;
+}
+
+char PiComReadByte()
+{
+  while(Serial.available() == 0);
+  
+  return Serial.read();
 }
 
 void PiComSendData(char data)

@@ -132,6 +132,17 @@ float v_servo_pos, v_servo_pos_current;
 
 NeoPixelController led_strip(RGB_LEDS, RGB_PIN);
 
+void (*command_handlers[])(char*) = {
+  &runMotorCommand,     // Command 0
+  &readPinDigital,      // Command 1
+  &writePinDigital,     // Command 2
+  &readPinAnalog,       // Command 3
+  &writePinDigital,     // Command 4
+  &writeServoPosition,  // Command 5
+  &readPing,            // Command 6
+  &ledSet               // Command 7
+};
+
 //----------------------------------------------------------------------------
 // setup
 // Runs once when the program starts
@@ -139,6 +150,7 @@ NeoPixelController led_strip(RGB_LEDS, RGB_PIN);
 void setup() {
   
   led_strip.begin();
+  led_strip.setPattern(NeoPixelController::PATTERN_CHASER, 10, 0, 0, 64);
   
   PiComInit();
 
@@ -166,13 +178,24 @@ void setup() {
 void loop() {
   
   //Check for new command
-  char command = 0;
-  float number = 0.0;
-  char arguments[kPiComArguments];
+  char command=3;
+  char command_data[kPiComArguments];
     
-  if(PiComGetCommand(command, number, arguments))
+  if(PiComGetData(command_data))
   {
-    processCommand(command, number, arguments);
+    //char i[] = {99, 0, 64, 0};
+    //command_handlers[7](i);
+    
+    if(command == 7){
+      pinMode(13, OUTPUT);
+      for(int i = 0; i < 20; i++)
+      {
+        digitalWrite(13, !digitalRead(13));
+        delay(200);
+      }
+    }
+    
+    command_handlers[command_data[0]](&command_data[1]);
   }
   
   // Handle moving the servos
@@ -198,7 +221,7 @@ void loop() {
 // arg3_f floating point payload
 // args is a 2 character array of the two argument characters
 //----------------------------------------------------------------------------
-void processCommand(char cmd, float arg3_f, char* args) {
+/*void processCommand(char cmd, float arg3_f, char* args) {
   switch (cmd) {
     case 'm' : // Motor Speed Command
       runMotorCommand(arg3_f, args[0], args[1]);
@@ -245,27 +268,31 @@ void processCommand(char cmd, float arg3_f, char* args) {
       }
       break;
   }
-}
+}*/
 //----------------------------------------------------------------------------
 // runMotorCommand
 // Figure out which wheels to turn on
 //----------------------------------------------------------------------------
-void runMotorCommand(float mspeed, char arg1, char arg2) {
-
+void runMotorCommand(char* command) {
+  
   // We have 4 unique instruction 'positions'
   // This accounts for the 'a' parameter in each of the arguments
   boolean shouldSetMotors[] = {
-    (arg1 == 'a' || arg1 == 'f'),
-    (arg1 == 'a' || arg1 == 'b'),
-    (arg2 == 'a' || arg2 == 'l'),
-    (arg2 == 'a' || arg2 == 'r')
+    (command[0] == 'a' || command[0] == 'f'), // front
+    (command[0] == 'a' || command[0] == 'b'), // back
+    (command[1] == 'a' || command[1] == 'l'), // left
+    (command[1] == 'a' || command[1] == 'r')  // right
   };
+  
+  float mspeed;
+  memcpy(&mspeed, &command[2], 4);
+  
   // This goes through each individual wheel, and makes sure that
   // the conditions for each wheel are met above to enable it.
   // Ex: If shouldSetMotors[0] (front) and shouldSetMotors[2] (left),
   //     then apply the speed to the pin MOTOR_FL_PWM_PIN
   for (int k = 0; k < 4; k++) {
-    if (shouldSetMotors[k / 2] && shouldSetMotors[2 + k%2]) {
+    if (shouldSetMotors[k >> 1] && shouldSetMotors[2 + k%2]) {
       writeMotorSpeed(mspeed, motorPins[k], motorPins[k + 4]);
     }
   }
@@ -324,10 +351,11 @@ void writeMotorSpeed(float mspeed, byte pwm_pin, byte gpio_pin) {
 //----------------------------------------------------------------------------
 // readPinDigital
 // Reads the value of a digital pin, and writes either 0 or 1
+// This is a stub
 //----------------------------------------------------------------------------
-void readPinDigital(byte pinID) {
+void readPinDigital(char* command) {
   // Check if pin type set to read
-  if (applyPinType(pinID, INPUT)) {
+  if (applyPinType(command[0], command[1])) {
     // Read the pin
     //Serial.println(digitalRead(pinID));
   }
@@ -337,8 +365,9 @@ void readPinDigital(byte pinID) {
 // writePinDigital
 // Writes a value to a particular pin
 //----------------------------------------------------------------------------
-void writePinDigital(byte pinID, int output) {
-
+void writePinDigital(char* command) {
+  uint8_t pinID = command[0];
+  uint8_t output = command[1];
   // Check if pin type set to write
   if (applyPinType(pinID, OUTPUT)) {
     // Write to the pin
@@ -350,11 +379,11 @@ void writePinDigital(byte pinID, int output) {
 // readPinAnalog
 // Reads the value of an analog pin, and prints a number from 0 to 1024.
 //----------------------------------------------------------------------------
-void readPinAnalog(byte pinID) {
+void readPinAnalog(char* command) {
   // Check if pin type set to read
-  if (applyPinType(pinID, INPUT)) {
+  if (applyPinType(command[0], INPUT)) {
     // Read the pin
-    PiComSendData((uint16_t)analogRead(pinID));
+    PiComSendData((uint16_t)analogRead(command[0]));
   }
 }
 
@@ -364,8 +393,9 @@ void readPinAnalog(byte pinID) {
 // Note that this generates a square wave on that pin, with the output
 // value being the duty cycle. If you want to specify frequency, use playTone
 //----------------------------------------------------------------------------
-void writePinAnalog(byte pinID, int output) {
-
+void writePinAnalog(char* command) {
+  uint8_t pinID = command[0];
+  uint8_t output = command[1];
   // When writing, you do not need to set the pin type to output,
   // However, strict mode should prevent us from doing anything
   if (applyPinType(pinID, OUTPUT)) {
@@ -375,53 +405,30 @@ void writePinAnalog(byte pinID, int output) {
 }
 
 //----------------------------------------------------------------------------
-// playTone
-// Plays a tone at a specified frequency on a pin
-//----------------------------------------------------------------------------
-void playTone(byte pinID, int freq) {
-  
-  // Stop the tone as needed
-  if (tonePin != 0) {
-    //noTone(tonePin);
-    tonePin = 0;
-  }
-
-  if (pinID == 0) {
-    return;
-  }
-
-  // Start the new tone, with appropriate duration
-  tonePin = pinID;
-  if (toneDuration == 0) {
-    //tone(pinID, freq); 
-  } else {
-    //tone(pinID, freq, toneDuration);
-  }
-}
-//----------------------------------------------------------------------------
 // writeServoPosition
 // write a position to a servo
 //----------------------------------------------------------------------------
-void writeServoPosition(char* args, float arg3_f) {
-
-  constrain(arg3_f, 0, 180);
-  switch(args[0]){
+void writeServoPosition(char* command) {
+  float angle;
+  memcpy(&angle, &command[1], 4);
+  
+  switch(command[0]){
     case 'v':
-      v_servo_pos = constrain(SERVO_V_CENTER - arg3_f, 20, 180);
+      v_servo_pos = constrain(SERVO_V_CENTER - angle, 20, 180);
       break;
     case 'h':
-      h_servo_pos = constrain(SERVO_H_CENTER + arg3_f, 0, 180);
+      h_servo_pos = constrain(SERVO_H_CENTER + angle, 0, 180);
       break;
   }
 }
 //----------------------------------------------------------------------------
 // readPing
 //----------------------------------------------------------------------------
-void readPing(char* args) {
+void readPing(char* command) {
   int index = -1;
-  switch (args[0]) {
+  switch (command[0]) {
     case 'f':
-      switch (args[1]) {
+      switch (command[1]) {
         case 'r':
           index = 6;
           break;
@@ -437,7 +444,7 @@ void readPing(char* args) {
       index = 3;
       break;
     case 'b':
-      switch (args[1]) {
+      switch (command[1]) {
         case 'r':
           index = 2;
           break;
@@ -454,4 +461,25 @@ void readPing(char* args) {
     PiComSendData(0.0f);
     //PiComSendData((float)ping_sensors[index].ping_cm());
   }
+}
+
+void ledSet(char* command)
+{
+  float period;
+  memcpy(&period, &command[4], 4);
+  
+  switch (command[0])
+      {
+        case 'o' :
+          led_strip.setPattern(NeoPixelController::PATTERN_OFF, 1000, 0, 0, 0);
+          break;
+        case 's' :
+          led_strip.setPattern(NeoPixelController::PATTERN_SOLID, 1000, command[1], command[2], command[3]);
+          break;
+        case 'r' :
+          led_strip.setPattern(NeoPixelController::PATTERN_RAINBOW, period, command[1], command[2], command[3]);
+          break;
+        case 'c' :
+          led_strip.setPattern(NeoPixelController::PATTERN_CHASER, period, command[1], command[2], command[3]);
+      }
 }
