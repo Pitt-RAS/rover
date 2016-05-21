@@ -39,7 +39,7 @@ void PiComInit(void);
 char PiComReadByte(void);
 
 // Get a new command
-boolean PiComGetData(char* data);
+boolean PiComGetData(uint8_t* data);
 
 // Send some data in response
 void PiComSendData(char data);

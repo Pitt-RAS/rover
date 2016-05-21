@@ -12,10 +12,8 @@ var CamMotion = {
 };
 
 var RobotMotion = {
-    FORWARD: false,
-    BACKWARD: false,
-    LEFT: false,
-    RIGHT: false,
+    FORWARD_V: 0,
+    ROTATION_V: 0,
 }
 
 var tiltDot;
@@ -119,16 +117,16 @@ $(document).ready(function() {
         switch (e.keyCode){
             // Robot motion codes
             case 37: // Left Arrow
-                RobotMotion.LEFT = true;
+                RobotMotion.ROTATION_V = -100;
                 break;
             case 38: // Up Arrow
-                RobotMotion.UP = true;
+                RobotMotion.FORWARD_V = 100;
                 break;
             case 39: // Right Arrow
-                RobotMotion.RIGHT = true;
+                RobotMotion.ROTATION_V = 100;
                 break;
             case 40: // Down Arrow
-                RobotMotion.DOWN = true;
+                RobotMotion.FORWARD_V = -100;
                 break;
                 
             // Camera Rotation Codes
@@ -158,16 +156,16 @@ $(document).ready(function() {
         switch (e.keyCode){
             // Robot motion codes
             case 37: // Left Arrow
-                RobotMotion.LEFT = false;
+                RobotMotion.ROTATION_V = 0;
                 break;
             case 38: // Up Arrow
-                RobotMotion.UP = false;
+                RobotMotion.FORWARD_V = 0;
                 break;
             case 39: // Right Arrow
-                RobotMotion.RIGHT = false;
+                RobotMotion.ROTATION_V = 0;
                 break;
             case 40: // Down Arrow
-                RobotMotion.DOWN = false;
+                RobotMotion.FORWARD_V = 0;
                 break;
                 
             // Camera Rotation Codes
@@ -273,15 +271,10 @@ $(document).ready(function() {
     // Send the key data over the websocket
     //---------------------------------------------
     function sendData(){
-        direction = 0;
-        if (RobotMotion.LEFT){direction += 4;} // Left
-        if (RobotMotion.UP){direction += 1;} // Up
-        if (RobotMotion.RIGHT){direction += 8;} // Right
-        if (RobotMotion.DOWN){direction += 2;} // Down
-        var toSend = "{\"Keys\":"+direction.toString();
-        toSend += ","+ "\"Tilt\":[";
-        toSend += CamMotion.horizontal + "," + CamMotion.vertical;
-        toSend += "]}";
+        var toSend = "{\"Velocity\":["
+        toSend += RobotMotion.FORWARD_V + "," + RobotMotion.ROTATION_V + "],";
+        toSend += "\"Tilt\":[";
+        toSend += CamMotion.horizontal + "," + CamMotion.vertical + "]}";
         console.log(toSend);
         webSock.send(toSend);
     }

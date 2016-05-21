@@ -118,17 +118,10 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
         #print("received message")
         msg = json.loads(message)
         # Arrow key input for motors
-        if (msg.has_key('Keys')):
-            # Arrow keys are sent in a binary format:
-            # 1 - Up, 2 - Down, 4 - Left, 8 - Right
-            arrows = msg['Keys']
-            direction = [arrows & 1, (arrows & 2) >> 1, (arrows & 4) >> 2, (arrows & 8) >> 3]
-            wheels = [-direction[0]+direction[1]+direction[2]-direction[3],direction[0]-direction[1]+direction[2]-direction[3]]
-            # The left and right sets of wheels will always move in the same direction.
-            # If a specific wheel needs to be addressed instead, use mfl or mbl
-            # Write the values to the arduino
-            # #print('writing some velocity or something')
-            arduino_com.controlMotors(wheels, self.throttle)
+        if (msg.has_key('Velocity')):
+            velocities = msg['Velocity']
+            arduino_com.controlMotors(velocities[0], velocities[1])
+            print(velocities)
 
         # Slider used to adjust throttle for all motors
         if (msg.has_key('Thr')):
@@ -137,7 +130,6 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
         if (msg.has_key('Tilt')):
             orientation = msg['Tilt']
             arduino_com.v_servo_write(orientation[1])
-            print orientation
             arduino_com.h_servo_write(orientation[0])
         #print('released lock')
     #-----------------------------------------------------

@@ -8,7 +8,7 @@ void PiComInit()
     Serial.begin(kPiComBaudRate);
 }
 
-boolean PiComGetData(char* data)
+boolean PiComGetData(uint8_t* data)
 {
 
   long time = millis();
@@ -24,7 +24,7 @@ boolean PiComGetData(char* data)
       
       char packetSize = PiComReadByte(); //First byte after handshake is the packet size including command
             
-      int bytes = Serial.readBytes(data, packetSize);
+      int bytes = Serial.readBytes((char*)data, packetSize);
 
       if(bytes == packetSize)
       {

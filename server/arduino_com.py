@@ -23,9 +23,9 @@ def v_servo_write(position):
 def h_servo_write(position):
     send_command(5, data='h', number=position)
     
-def controlMotors(wheels, throttle):
-    send_command(0, data='al', number=wheels[0] * throttle)
-    send_command(0, data='ar', number=wheels[1] * throttle)
+def controlMotors(forwardV, rotationalV):
+    #velocities range from -100 to 100 and we can't send negative numbers
+    r = send_command(0, data=[100+forwardV, 100+rotationalV])
 
 #this method needs to be refactored like the ones above but needs the communication protocol to change so
 #that the serial lock is not lost when reading in a return value    
@@ -100,7 +100,6 @@ def write_data(command, data):
     arduino_serial.write(chr(len(final_data)))
     arduino_serial.write(final_data)
     success = arduino_serial.readline().rstrip()
-    #print(success)
 
 def handshake():
   success = "no"

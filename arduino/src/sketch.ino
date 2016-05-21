@@ -73,15 +73,15 @@
 #define STRICT_PINS true
 
 // Motor pins
-#define MOTOR_FL_PWM_PIN 10
-#define MOTOR_FL_GPIO_PIN 11
-#define MOTOR_FR_PWM_PIN 8
-#define MOTOR_FR_GPIO_PIN 9
+#define MOTOR_BL_PWM_PIN 10
+#define MOTOR_BL_GPIO_PIN 11
+#define MOTOR_BR_PWM_PIN 8
+#define MOTOR_BR_GPIO_PIN 9
 
-#define MOTOR_BL_PWM_PIN 4
-#define MOTOR_BL_GPIO_PIN 5
-#define MOTOR_BR_PWM_PIN 6
-#define MOTOR_BR_GPIO_PIN 7
+#define MOTOR_FR_PWM_PIN 4
+#define MOTOR_FR_GPIO_PIN 5
+#define MOTOR_FL_PWM_PIN 6
+#define MOTOR_FL_GPIO_PIN 7
 
 #define SERVO1_PIN 3
 #define SERVO2_PIN 2
@@ -132,7 +132,7 @@ float v_servo_pos, v_servo_pos_current;
 
 NeoPixelController led_strip(RGB_LEDS, RGB_PIN);
 
-void (*command_handlers[])(char*) = {
+void (*command_handlers[])(uint8_t*) = {
   &runMotorCommand,     // Command 0
   &readPinDigital,      // Command 1
   &writePinDigital,     // Command 2
@@ -153,6 +153,8 @@ void setup() {
   led_strip.setPattern(NeoPixelController::PATTERN_CHASER, 10, 0, 0, 64);
   
   PiComInit();
+  
+  Serial1.begin(115200);
 
   // Set the pin mode for each motor pin, and mark it for future reference
   for (int k = 0; k < 8; k++) {
@@ -176,25 +178,12 @@ void setup() {
 // Main program loop
 //----------------------------------------------------------------------------
 void loop() {
-  
   //Check for new command
   char command=3;
-  char command_data[kPiComArguments];
+  uint8_t command_data[kPiComArguments];
     
   if(PiComGetData(command_data))
   {
-    //char i[] = {99, 0, 64, 0};
-    //command_handlers[7](i);
-    
-    if(command == 7){
-      pinMode(13, OUTPUT);
-      for(int i = 0; i < 20; i++)
-      {
-        digitalWrite(13, !digitalRead(13));
-        delay(200);
-      }
-    }
-    
     command_handlers[command_data[0]](&command_data[1]);
   }
   
@@ -273,29 +262,57 @@ void loop() {
 // runMotorCommand
 // Figure out which wheels to turn on
 //----------------------------------------------------------------------------
-void runMotorCommand(char* command) {
+void runMotorCommand(uint8_t* command) {
+ 
+  int forwardPercent = (int)command[0] - 100; //100 - 100 = 0
+  int rotationPercent = (int)command[1] - 100; //200 - 100 = 100
+    
+  int pwml = (forwardPercent + rotationPercent) * 255 / 100; // Forward plus rotation on that side
+  int pwmr = (forwardPercent - rotationPercent) * 255 / 100; // Forward minus rotation, no need to subtract because the motor is on the other side of the robot
   
-  // We have 4 unique instruction 'positions'
-  // This accounts for the 'a' parameter in each of the arguments
-  boolean shouldSetMotors[] = {
-    (command[0] == 'a' || command[0] == 'f'), // front
-    (command[0] == 'a' || command[0] == 'b'), // back
-    (command[1] == 'a' || command[1] == 'l'), // left
-    (command[1] == 'a' || command[1] == 'r')  // right
-  };
+  Serial1.println(pwmr);
   
-  float mspeed;
-  memcpy(&mspeed, &command[2], 4);
-  
-  // This goes through each individual wheel, and makes sure that
-  // the conditions for each wheel are met above to enable it.
-  // Ex: If shouldSetMotors[0] (front) and shouldSetMotors[2] (left),
-  //     then apply the speed to the pin MOTOR_FL_PWM_PIN
-  for (int k = 0; k < 4; k++) {
-    if (shouldSetMotors[k >> 1] && shouldSetMotors[2 + k%2]) {
-      writeMotorSpeed(mspeed, motorPins[k], motorPins[k + 4]);
-    }
+  // Front Left
+  if(pwml >= 0){ // Forward
+    digitalWrite(MOTOR_FL_GPIO_PIN, LOW);
+    analogWrite(MOTOR_FL_PWM_PIN, pwml);
   }
+  else{ // Reverse
+    digitalWrite(MOTOR_FL_GPIO_PIN, HIGH);
+    analogWrite(MOTOR_FL_PWM_PIN, 255 + pwml);
+  }
+  
+  // Front Right
+  if(pwmr >= 0){ // Forward
+    digitalWrite(MOTOR_FR_GPIO_PIN, HIGH);
+    analogWrite(MOTOR_FR_PWM_PIN, 255 - pwmr);
+  }
+  else{ // Reverse
+    digitalWrite(MOTOR_FR_GPIO_PIN, LOW);
+    analogWrite(MOTOR_FR_PWM_PIN, abs(pwmr));
+  }
+  
+  // Back Left
+  if(pwml >= 0){ // Forward
+    digitalWrite(MOTOR_BL_GPIO_PIN, HIGH);
+    analogWrite(MOTOR_BL_PWM_PIN, 255 - pwml);
+  }
+  else{ // Reverse
+    digitalWrite(MOTOR_BL_GPIO_PIN, LOW);
+    analogWrite(MOTOR_BL_PWM_PIN, abs(pwml));
+  }
+  
+  // Back Right
+  if(pwmr >= 0){ // Forward
+    digitalWrite(MOTOR_BR_GPIO_PIN, LOW);
+    analogWrite(MOTOR_BR_PWM_PIN, pwmr);
+  }
+  else{ // Reverse
+    digitalWrite(MOTOR_BR_GPIO_PIN, HIGH);
+    analogWrite(MOTOR_BR_PWM_PIN, 255 + pwmr);
+  }
+  
+  
 }
 //----------------------------------------------------------------------------
 // applyPinType
@@ -353,7 +370,7 @@ void writeMotorSpeed(float mspeed, byte pwm_pin, byte gpio_pin) {
 // Reads the value of a digital pin, and writes either 0 or 1
 // This is a stub
 //----------------------------------------------------------------------------
-void readPinDigital(char* command) {
+void readPinDigital(uint8_t* command) {
   // Check if pin type set to read
   if (applyPinType(command[0], command[1])) {
     // Read the pin
@@ -365,7 +382,7 @@ void readPinDigital(char* command) {
 // writePinDigital
 // Writes a value to a particular pin
 //----------------------------------------------------------------------------
-void writePinDigital(char* command) {
+void writePinDigital(uint8_t* command) {
   uint8_t pinID = command[0];
   uint8_t output = command[1];
   // Check if pin type set to write
@@ -379,7 +396,7 @@ void writePinDigital(char* command) {
 // readPinAnalog
 // Reads the value of an analog pin, and prints a number from 0 to 1024.
 //----------------------------------------------------------------------------
-void readPinAnalog(char* command) {
+void readPinAnalog(uint8_t* command) {
   // Check if pin type set to read
   if (applyPinType(command[0], INPUT)) {
     // Read the pin
@@ -393,7 +410,7 @@ void readPinAnalog(char* command) {
 // Note that this generates a square wave on that pin, with the output
 // value being the duty cycle. If you want to specify frequency, use playTone
 //----------------------------------------------------------------------------
-void writePinAnalog(char* command) {
+void writePinAnalog(uint8_t* command) {
   uint8_t pinID = command[0];
   uint8_t output = command[1];
   // When writing, you do not need to set the pin type to output,
@@ -408,7 +425,7 @@ void writePinAnalog(char* command) {
 // writeServoPosition
 // write a position to a servo
 //----------------------------------------------------------------------------
-void writeServoPosition(char* command) {
+void writeServoPosition(uint8_t* command) {
   float angle;
   memcpy(&angle, &command[1], 4);
   
@@ -424,7 +441,7 @@ void writeServoPosition(char* command) {
 //----------------------------------------------------------------------------
 // readPing
 //----------------------------------------------------------------------------
-void readPing(char* command) {
+void readPing(uint8_t* command) {
   int index = -1;
   switch (command[0]) {
     case 'f':
@@ -463,7 +480,7 @@ void readPing(char* command) {
   }
 }
 
-void ledSet(char* command)
+void ledSet(uint8_t* command)
 {
   float period;
   memcpy(&period, &command[4], 4);
