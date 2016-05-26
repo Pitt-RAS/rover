@@ -20,8 +20,25 @@ var tiltDot;
 
 var timeOfLastMessage = 0;
 
+var server = null;
+if(window.location.protocol === 'http:')
+  //server = "http://" + window.location.hostname + ":8088/janus";
+  server = "http://aftersomemath.com:8088/janus";
+else
+  server = "https://" + window.location.hostname + ":8089/janus";
+
+var janus = null;
+var streaming1 = null;
+var streaming2 = null;
+
 $(document).ready(function() {
-    var webSock = new WebSocket("ws://192.168.2.115/keysocket");
+    Janus.init({
+     debug: false,
+     callback: function() { connectJanus(); }
+    });
+     
+
+    var webSock = new WebSocket("ws://" + window.location.hostname + ":81/keysocket");
     webSock.onmessage = getData;
   
     if($('#SwapEyes').length > 0){
@@ -30,9 +47,9 @@ $(document).ready(function() {
     
     if ($('#TiltDot').length > 0) {
             tiltDot = document.getElementById('TiltDot');
-            console.log(tiltDot);
+            //console.log(tiltDot);
     }
-    
+
     document.onkeydown = setKeyDown;
     document.onkeyup = setKeyUp;
     
@@ -92,12 +109,12 @@ $(document).ready(function() {
     //---------------------------------------------
     function getData (event) {
         var msg = JSON.parse(event.data);
-        console.log(msg);
+        //console.log(msg);
         // We can select specific JSON groups by using msg.name, where JSON contains "name":x
         // Every type MUST have msg.type to determine what else is pulled from it
         switch (msg.type){
             case "print": // Print out msg.data
-                console.log(msg.data);
+                //console.log(msg.data);
                 break;
             case "battery":
                 $('#battery-voltage').text(msg.data);
@@ -242,7 +259,6 @@ $(document).ready(function() {
     function updateTiltDot(){
         if( tiltDot != null)
         {
-            console.log("updating");
             tiltDot.style.left = (CamMotion.horizontal * (57 / 90)) + 'px';
             tiltDot.style.top = (-CamMotion.vertical * (57 / 180)) + 'px';
             $('#servo-vertical-angle').text(CamMotion.vertical);
@@ -275,7 +291,7 @@ $(document).ready(function() {
         toSend += RobotMotion.FORWARD_V + "," + RobotMotion.ROTATION_V + "],";
         toSend += "\"Tilt\":[";
         toSend += CamMotion.horizontal + "," + CamMotion.vertical + "]}";
-        console.log(toSend);
+        //console.log(toSend);
         webSock.send(toSend);
     }
 
@@ -324,3 +340,105 @@ $(document).ready(function() {
         }
     }
 });
+
+function connectJanus()
+{
+  // Make sure the browser supports WebRTC
+  if(!Janus.isWebrtcSupported()) {
+    bootbox.alert("No WebRTC support... ");
+    return;
+  }
+  // Create session
+  janus = new Janus(
+    {
+      server: server,
+      iceServers: [{url: "turn:127.0.0.1:9000?transport=udp", username: "rover", credential: "rover"}],
+      success: function() {
+        // Attach to streaming1 plugin
+        janus.attach(
+          {
+            plugin: "janus.plugin.streaming",
+            success: function(pluginHandle) { streaming1 = pluginHandle; startStream1();},
+            error: function(error) { Janus.error("  -- Error attaching plugin... ", error); },
+            onmessage: function(msg, jsep) {
+              Janus.debug(" ::: Got a message :::");
+              Janus.debug(JSON.stringify(msg));
+              if(jsep !== undefined && jsep !== null) {
+                Janus.debug("Handling SDP as well...");
+                Janus.debug(jsep);
+                // Answer
+                streaming1.createAnswer(
+                  {
+                    jsep: jsep,
+                    media: { audioSend: false, videoSend: false },  // We want recvonly audio/video
+                    success: function(jsep) {
+                      Janus.debug("Got SDP!");
+                      Janus.debug(jsep);
+                      var body = { "request": "start" };
+                      streaming1.send({"message": body, "jsep": jsep});
+                    },
+                    error: function(error) {
+                      Janus.error("WebRTC error:", error);
+                    }
+                  });
+              }
+            },
+            onremotestream: function(stream) { console.log("stream 1 got connected!"); attachMediaStream($('#remotevideo1').get(0), stream); }
+          });
+        
+        //Attatch to streaming2 plugin
+        janus.attach(
+          {
+            plugin: "janus.plugin.streaming",
+            success: function(pluginHandle) { streaming2 = pluginHandle; startStream2();},
+            error: function(error) { Janus.error("  -- Error attaching plugin... ", error); },
+            onmessage: function(msg, jsep) {
+              Janus.debug(" ::: Got a message :::");
+              Janus.debug(JSON.stringify(msg));
+              if(jsep !== undefined && jsep !== null) {
+                Janus.debug("Handling SDP as well...");
+                Janus.debug(jsep);
+                // Answer
+                streaming2.createAnswer(
+                  {
+                    jsep: jsep,
+                    media: { audioSend: false, videoSend: false },  // We want recvonly audio/video
+                    success: function(jsep) {
+                      Janus.debug("Got SDP!");
+                      Janus.debug(jsep);
+                      var body = { "request": "start" };
+                      streaming2.send({"message": body, "jsep": jsep});
+                    },
+                    error: function(error) {
+                      Janus.error("WebRTC error:", error);
+                    }
+                  });
+              }
+            },
+            onremotestream: function(stream) { console.log("stream 2 got connected!" + stream.VideoStreamTrack); attachMediaStream($('#remotevideo2').get(0), stream); }
+          });
+      },
+      error: function(error) {
+        Janus.error(error);
+      },
+    });
+}
+
+function startStream1() {
+  var body = { "request": "watch", id: parseInt(1) };
+  streaming1.send({"message": body});
+}
+
+function startStream2() {
+  body = { "request": "watch", id: parseInt(2) };
+  streaming2.send({"message": body});
+}
+
+function stopStream() {
+  var body = { "request": "stop" };
+  streaming1.send({"message": body});
+  streaming1.hangup();
+  
+  streaming2.send({"message": body});
+  streaming2.hangup();
+}

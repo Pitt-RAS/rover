@@ -2,10 +2,12 @@
 
 PID1=""
 PID2=""
+PID3=""
 
 function get_pid {
     PID1=`pidof python /home/pi/rover/server/server.py`
-    PID2=`pidof mjpg_streamer`
+    PID2=`pidof janus`
+    PID3='pidof gst-launch-1.0'
 }
 
 function stop {
@@ -18,77 +20,32 @@ else
 fi
 
 if [ -z "${PID2}" ]; then
-    echo "cameras are not running."
+   echo "Janus is not running"
 else
-    echo "halting cameras"
-    cd /home/pi/rover/mjpg-streamer
-    COUNTER=-1
-
-    while [ $? != 0 ] || [ ${COUNTER} == "-1" ]; do
-        ((COUNTER++))
-        ./mjpg-streamer.sh stop /dev/video${COUNTER} 8081
-    done
-
-    ((COUNTER++))
-    ./mjpg-streamer.sh stop /dev/video${COUNTER} 8082 
-   
-    while [ $? != 0 ]; do
-        ((COUNTER++))
-        ./mjpg-streamer.sh stop /dev/video${COUNTER} 8082
-    done
-
-    sleep 1
-    echo "... Done."
+   echo "Killing Janus"
+   sudo kill -SIGKILL $PID2
 fi
+
 }
 
 function start {
 get_pid
 if [ -z "${PID1}" ] || [ -z "${PID2}" ]; then
-    echo  "Starting server.."
-###############################################################
-    #cd "$(dirname "$0")"
-    cd #mjpg-streamer
-    cd /home/pi/rover/mjpg-streamer
-    COUNTER=-1
-
-    #while [ $? != 0 ] || [ ${COUNTER} == "-1" ]; do
-    #    ((COUNTER++))
-    #    ./mjpg-streamer.sh stop /dev/video${COUNTER} 8081
-    #    ./mjpg-streamer.sh start /dev/video${COUNTER} 8081
-    #done
-
-    #uvcdynctrl -v -d video0 --set="Focus, Auto" 0
-    #uvcdynctrl -v -d video${COUNTER} --set="Focus, Auto" 0
-
-    #((COUNTER++))
-    #./mjpg-streamer.sh stop /dev/video${COUNTER} 8082 
-    #./mjpg-streamer.sh start /dev/video${COUNTER} 8082
-    #   
-    #while [ $? != 0 ]; do
-    #    ((COUNTER++))
-    #    ./mjpg-streamer.sh stop /dev/video${COUNTER} 8082
-    #    ./mjpg-streamer.sh start /dev/video${COUNTER} 8082
-    #done
-
-    #uvcdynctrl -v -d video1 --set="Focus, Auto" 0
-    #uvcdynctrl -v -d video${COUNTER} --set="Focus, Auto" 0
-    echo "/dev/video0"
-    ./mjpg-streamer.sh stop /dev/video0 8081
-    ./mjpg-streamer.sh start /dev/video0 8081
-    echo "/dev/video1"
-    ./mjpg-streamer.sh stop /dev/video1 8082
-    ./mjpg-streamer.sh start /dev/video1 8082
+    echo "Turning off autofocus"
     uvcdynctrl -v -d video0 --set="Focus, Auto" 0
     uvcdynctrl -v -d video1 --set="Focus, Auto" 0
+
+    echo "Starting Janus"
+    /opt/janus/bin/janus -F /opt/janus/etc/janus
+
     #cd ../server
     sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
     python /home/pi/rover/server/server.py >> /home/pi/rover/server/server.log 2>&1 &
-##############################################################
+
     get_pid
-    echo "Done, PID(server.py)=$PID1 , PID(mjpeg-streamer)=$PID2"
+    echo "Done, PID(server.py)=$PID1 , PID(janus)=$PID2"
 else
-    echo "server is already running, PID(server.py)=$PID1 , PID(mjpeg-streamer)=$PID2"
+    echo "server is already running, PID(server.py)=$PID1 , PID(janus)=$PID2"
 fi
 
 }

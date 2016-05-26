@@ -67,24 +67,24 @@
 
                         <!-- Table container for video streams -->
                         <span id="ip">ip address</span>
-						<button id="SwapEyes">Swap Eyes</button>
-						<button id="RecalibrateTilt">Recalibrate Tilt</button>
+            <button id="SwapEyes">Swap Eyes</button>
+            <button id="RecalibrateTilt">Recalibrate Tilt</button>
                         <span id='ping-display'></span>
                         <div class="interface-center">
                         <table class="interface-table">
                                 <tr>
                                         <td>
-                                                <img src="http://192.168.2.115:8081/?action=stream" alt="Stream1" id="EyeR">
+                                          <video id="remotevideo1" autoplay/>
                                         </td>
                                         <td>
-                                                <img src="http://192.168.2.115:8082/?action=stream" alt="Stream2" id="EyeL">
+                                           <video id="remotevideo2" autoplay/>
                                         </td>
                                         <td>
                                             <div>
                                                 <div>Battery: <span id="battery-voltage"></span>V</div>
-												<div>Alpha: <span id="rotAlpha"></span></div>
-												<div>Beta: <span id="rotBeta"></span></div>
-												<div>Gamma: <span id="rotGamma"></span></div>
+                        <div>Alpha: <span id="rotAlpha"></span></div>
+                        <div>Beta: <span id="rotBeta"></span></div>
+                        <div>Gamma: <span id="rotGamma"></span></div>
                                                 <div>Vertical Angle: <span id="servo-vertical-angle"></span></div>
                                                 <div>Horiz Angle: <span id="servo-horizontal-angle"></span></div>
                                                 <div class="johncontainer">
@@ -118,6 +118,7 @@
                                 <!-- Placed at the end of the document so the pages load faster -->
                                 <script src="index_files/jquery.js"></script>
                                 <script src="js/interface.js"></script>
+                                <script type="text/javascript" src="js/janus.js" ></script>
                                 <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')</script>
                                 <script src="index_files/bootstrap.js"></script>
                                 <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
