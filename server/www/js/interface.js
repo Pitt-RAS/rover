@@ -22,10 +22,14 @@ var timeOfLastMessage = 0;
 
 var server = null;
 if(window.location.protocol === 'http:')
-  //server = "http://" + window.location.hostname + ":8088/janus";
-  server = "http://aftersomemath.com:8088/janus";
-else
-  server = "https://" + window.location.hostname + ":8089/janus";
+{
+  if(window.location.hostname.indexOf("192.168") == -1){
+      server = "http://aftersomemath.com:8088/janus";
+  }
+  else{
+      server = "http://" + window.location.hostname + ":8088/janus";
+  }
+}
 
 var janus = null;
 var streaming1 = null;
