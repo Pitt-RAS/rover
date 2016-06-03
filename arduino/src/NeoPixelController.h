@@ -27,7 +27,9 @@ class NeoPixelController
     
     void update(void);
     
-    void setPattern(const Pattern pattern, const int& period, const int& r, const int& b, const int& g);
+    void setPattern(const Pattern pattern, const int& period, const int& r, const int& g, const int& b);
+    
+    void setColor(const int& r, const int& g, const int& b);
 
     uint32_t Wheel(byte WheelPos);
     

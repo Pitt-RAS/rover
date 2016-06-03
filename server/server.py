@@ -130,6 +130,11 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
             orientation = msg['Tilt']
             arduino_com.v_servo_write(orientation[1])
             arduino_com.h_servo_write(orientation[0])
+        if (msg.has_key('Bitrate')):
+            os.system('/home/pi/rover/start-everything.sh restartcamera ' + str(msg['Bitrate']))
+        if (msg.has_key('RGB')):
+            color = msg['RGB']
+            arduino_com.led_color(color[0], color[1], color[2])
     #-----------------------------------------------------
     # check_origin
     # Set to true to allow all cross-origin traffic

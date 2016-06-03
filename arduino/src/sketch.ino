@@ -421,5 +421,7 @@ void ledSet(uint8_t* command)
           break;
         case 'c' :
           led_strip.setPattern(NeoPixelController::PATTERN_CHASER, period, command[1], command[2], command[3]);
+        case 'C' :
+          led_strip.setColor(command[1], command[2], command[3]);
       }
 }

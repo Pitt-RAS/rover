@@ -45,9 +45,9 @@ void NeoPixelController::update(){
   }
 }
 
-void NeoPixelController::setPattern(const Pattern pattern, const int& period, const int& r, const int& b, const int& g)
+void NeoPixelController::setPattern(const Pattern pattern, const int& period, const int& r, const int& g, const int& b)
 {
-  m_CurrentColor = m_PixelStrip.Color(r, b, g);
+  m_CurrentColor = m_PixelStrip.Color(r, g, b);
   m_CurrentPattern = pattern;
   
   m_UpdatePeriod = abs(period);
@@ -61,6 +61,11 @@ void NeoPixelController::setPattern(const Pattern pattern, const int& period, co
   
   m_UpdateImmediately = true;
 
+}
+
+void NeoPixelController::setColor(const int& r, const int& g, const int& b)
+{
+  m_CurrentColor = m_PixelStrip.Color(r, g, b);
 }
 
 void NeoPixelController::pattern_rainbow()

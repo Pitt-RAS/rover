@@ -47,11 +47,8 @@ if [ -z "${PID1}" ] || [ -z "${PID2}" ] || [ -z "${PID3}" ] ; then
     #cd ../server
     sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
     python /home/pi/rover/server/server.py >> /home/pi/rover/server/server.log 2>&1 &    
-    
-    echo "Starting Cameras point at local janus"
-    gst-launch-1.0 v4l2src  device=/dev/video0 ! video/x-raw,width=640,height=480, framerate=30/1 ! omxh264enc control-rate=1 target-bitrate="$BITRATE" ! h264parse config-interval=1 ! rtph264pay pt=98 ! udpsink host=$JANUS port=8004 >> /home/pi/rover/server/gstreamer-video0.log 2>&1 &
-
-    gst-launch-1.0 v4l2src  device=/dev/video1 ! video/x-raw,width=640,height=480, framerate=30/1 ! omxh264enc control-rate=1 target-bitrate="$BITRATE" ! h264parse config-interval=1 ! rtph264pay pt=98 ! udpsink host=$JANUS port=8005 >> /home/pi/rover/server/gstreamer-video1.log 2>&1 &
+   
+    startcameras
    
     get_pid
     echo "Done, PID(server.py)=$PID1 , PID(janus)=$PID2, PID(gstreamer)=$PID3"
@@ -88,6 +85,13 @@ fi
 
 function startcameras {
     echo "start cameras"
+    
+    get_pid
+    sudo kill -SIGKILL $PID3
+    
+    gst-launch-1.0 v4l2src  device=/dev/video0 ! video/x-raw,width=640,height=480, framerate=30/1 ! omxh264enc control-rate=1 target-bitrate="$BITRATE" ! h264parse config-interval=1 ! rtph264pay pt=98 ! udpsink host=$JANUS port=8004 >> /home/pi/rover/server/gstreamer-video0.log 2>&1 &
+
+    gst-launch-1.0 v4l2src  device=/dev/video1 ! video/x-raw,width=640,height=480, framerate=30/1 ! omxh264enc control-rate=1 target-bitrate="$BITRATE" ! h264parse config-interval=1 ! rtph264pay pt=98 ! udpsink host=$JANUS port=8005 >> /home/pi/rover/server/gstreamer-video1.log 2>&1 &
 }
 
 case "$1" in
@@ -128,6 +132,22 @@ case "$1" in
     status)
         status
         ;;
+    startcameras)
+        if [ -n "$2" ] ; then
+            if [[ $2 =~ ^[0-9]+$ ]]; then
+                BITRATE=$2
+                echo "setting bitrate"
+            else
+                echo "If you're going to set a bitrate make it a valid number"
+            fi
+        fi
+        
+        if [ -n "$3" ] ; then
+           echo "using global camera server"
+           JANUS="aftersomemath.com"
+        fi
+        startcameras
+        ;;
     *)
-        echo "Usage: $0 {start|stop|restart|status}"
+        echo "Usage: $0 {start|stop|restart|status|startcameras}"
 esac

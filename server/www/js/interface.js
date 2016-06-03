@@ -14,7 +14,13 @@ var CamMotion = {
 var RobotMotion = {
     FORWARD_V: 0,
     ROTATION_V: 0,
-}
+};
+
+var RGB = {
+    RED: 0,
+    GREEN: 0,
+    BLUE: 0,
+};
 
 var tiltDot;
 
@@ -36,13 +42,18 @@ var streaming1 = null;
 var streaming2 = null;
 
 $(document).ready(function() {
+    console.log("yo");
+    var input = $("#hex");
+    var cw = input_example();
+    cw.onchange(function() {callback(cw.color())});
+    
     Janus.init({
      debug: false,
      callback: function() { connectJanus(); }
     });
-     
+    
 
-    var webSock = new WebSocket("ws://" + window.location.hostname + ":81/keysocket");
+    var webSock = new WebSocket("ws://" + window.location.hostname + ":" + window.location.port + "/keysocket");
     webSock.onmessage = getData;
   
     if($('#SwapEyes').length > 0){
@@ -74,6 +85,23 @@ $(document).ready(function() {
     
     setInterval(function(){ cameraUpdateOrientation(); }, 50);
 
+    
+    function callback(color)
+    {
+        RGB.RED = Math.round(color.r);
+        RGB.GREEN = Math.round(color.g);
+        RGB.BLUE = Math.round(color.b);
+        safeSendData();
+    }
+    
+    function input_example()
+    {
+        var cw = Raphael.colorwheel($(".colorwheel")[0],150);
+        cw.input($("#hex")[0]);
+        return cw;
+    }
+    
+    
     //---------------------------------------------
     // Update Camera Orientation variables
     //---------------------------------------------
@@ -294,8 +322,10 @@ $(document).ready(function() {
         var toSend = "{\"Velocity\":["
         toSend += RobotMotion.FORWARD_V + "," + RobotMotion.ROTATION_V + "],";
         toSend += "\"Tilt\":[";
-        toSend += CamMotion.horizontal + "," + CamMotion.vertical + "]}";
-        //console.log(toSend);
+        toSend += CamMotion.horizontal + "," + CamMotion.vertical + "],";
+        toSend += "\"RGB\":[";
+        toSend += RGB.RED + "," + RGB.GREEN + "," + RGB.BLUE + "]}";
+        console.log(toSend);
         webSock.send(toSend);
     }
 

@@ -54,8 +54,11 @@ def led_solid(r, g, b):
 def led_off():
   send_command(7, data=['o'])
   
+def led_color(r, g, b):
+  send_command(7, data=['c', r, g, b])
+  
 def led_chasers(r, g, b, period):
-  send_command(7, data = ['c', r, g, b], number=period)
+  send_command(7, data = ['C', r, g, b], number=period)
 
 def pack_bytes(list):
   string = ""
