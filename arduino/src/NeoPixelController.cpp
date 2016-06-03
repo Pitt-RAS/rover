@@ -8,9 +8,14 @@ NeoPixelController::NeoPixelController(int leds, int pin)
   m_CurrentPattern = PATTERN_OFF;
   m_UpdateImmediately = false;
   m_UpdatePeriod = 1000;
-  
+  m_RainbowUpdatePeriod = 100;
+
+    
   m_TimeSinceUpdate = millis();
+  m_RainbowTimeSinceUpdate = millis();
   m_CurrentColor = m_PixelStrip.Color(0, 0, 0);
+  
+  rainbow = false;
   
   m_PatternDirection = true;
   
@@ -23,8 +28,24 @@ void NeoPixelController::begin(void){
 }
 
 void NeoPixelController::update(){
+  
+  if(rainbow)
+  {
+    if(millis() - m_RainbowTimeSinceUpdate > m_RainbowUpdatePeriod){
+      m_RainbowTimeSinceUpdate = millis();
+      m_CurrentColor = rainbowColor();
+    }
+    
+    //Hack for pattern solid since it gets updated so infrequently usually
+    if(m_CurrentPattern == PATTERN_SOLID){
+      pattern_solid();
+    }
+  }
+  
+  
   if((millis() - m_TimeSinceUpdate > m_UpdatePeriod) || m_UpdateImmediately)
   {
+    
     m_UpdateImmediately = false;
     m_TimeSinceUpdate = millis();
     switch(m_CurrentPattern) 
@@ -45,9 +66,8 @@ void NeoPixelController::update(){
   }
 }
 
-void NeoPixelController::setPattern(const Pattern pattern, const int& period, const int& r, const int& g, const int& b)
+void NeoPixelController::setPattern(const Pattern pattern, const int& period)
 {
-  m_CurrentColor = m_PixelStrip.Color(r, g, b);
   m_CurrentPattern = pattern;
   
   m_UpdatePeriod = abs(period);
@@ -65,7 +85,17 @@ void NeoPixelController::setPattern(const Pattern pattern, const int& period, co
 
 void NeoPixelController::setColor(const int& r, const int& g, const int& b)
 {
-  m_CurrentColor = m_PixelStrip.Color(r, g, b);
+  rainbow = false;
+  if(r + g + b < kMaxOutputPower)
+  {
+    m_CurrentColor = m_PixelStrip.Color(r, g, b);
+  }
+}
+
+void NeoPixelController::setRainbow(const int& period)
+{
+  m_RainbowUpdatePeriod = period;
+  rainbow = true;
 }
 
 void NeoPixelController::pattern_rainbow()
@@ -131,6 +161,12 @@ void NeoPixelController::pattern_chaser()
   
 }
 
+uint32_t NeoPixelController::rainbowColor()
+{
+  static int lastC = 0;
+  lastC = (lastC + 1)%255;
+  return Wheel(lastC);
+}
 
 // Take from Adafruits NeoPixel Library
 // Input a value 0 to 255 to get a color value.

@@ -150,7 +150,6 @@ void (*command_handlers[])(uint8_t*) = {
 void setup() {
   
   led_strip.begin();
-  led_strip.setPattern(NeoPixelController::PATTERN_CHASER, 10, 0, 0, 64);
   
   PiComInit();
   
@@ -406,22 +405,27 @@ void readPing(uint8_t* command) {
 void ledSet(uint8_t* command)
 {
   float period;
-  memcpy(&period, &command[4], 4);
+  memcpy(&period, &command[1], 4);
   
   switch (command[0])
       {
         case 'o' :
-          led_strip.setPattern(NeoPixelController::PATTERN_OFF, 1000, 0, 0, 0);
+          led_strip.setPattern(NeoPixelController::PATTERN_OFF, 1000);
           break;
         case 's' :
-          led_strip.setPattern(NeoPixelController::PATTERN_SOLID, 1000, command[1], command[2], command[3]);
+          led_strip.setPattern(NeoPixelController::PATTERN_SOLID, 1000);
           break;
         case 'r' :
-          led_strip.setPattern(NeoPixelController::PATTERN_RAINBOW, period, command[1], command[2], command[3]);
+          led_strip.setPattern(NeoPixelController::PATTERN_RAINBOW, period);
           break;
         case 'c' :
-          led_strip.setPattern(NeoPixelController::PATTERN_CHASER, period, command[1], command[2], command[3]);
+          led_strip.setPattern(NeoPixelController::PATTERN_CHASER, period);
+          break;
         case 'C' :
           led_strip.setColor(command[1], command[2], command[3]);
-      }
+          break;
+        case 'R' :
+          led_strip.setRainbow(period);
+          break;
+        }
 }

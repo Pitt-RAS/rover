@@ -134,7 +134,18 @@ class KeyPressHandler(tornado.websocket.WebSocketHandler):
             os.system('/home/pi/rover/start-everything.sh restartcamera ' + str(msg['Bitrate']))
         if (msg.has_key('RGB')):
             color = msg['RGB']
-            arduino_com.led_color(color[0], color[1], color[2])
+            if color[3] == True:
+              arduino_com.led_rainbowfy(color[6])
+            else:
+              arduino_com.led_color(color[0], color[1], color[2])
+            
+            if color[4] == "Solid" :
+              arduino_com.led_solid()
+            elif color[4] == "Chasers" :
+              arduino_com.led_chasers(float(color[5]))
+            elif color[4] == "Rainbow" :
+              arduino_com.led_rainbow(float(color[5]))
+
     #-----------------------------------------------------
     # check_origin
     # Set to true to allow all cross-origin traffic
@@ -172,7 +183,7 @@ if __name__ == '__main__':
     
     print('Started Arduino Com')
     arduino_com.init()
-    arduino_com.led_chasers(0, 128, 0, 10)
+    arduino_com.led_chasers(10)
     
     try:
         tornado.ioloop.IOLoop.instance().start()

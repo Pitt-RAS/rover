@@ -46,6 +46,22 @@ $(document).ready(function() {
     var input = $("#hex");
     var cw = input_example();
     cw.onchange(function() {callback(cw.color())});
+        
+    $( "#rainbowify" ).change(function() {
+      safeSendData();
+    });
+    
+     $("#ledPattern").change(function(e) {
+      safeSendData();
+    });
+    
+    $("#rainbowPeriod").change(function(e) {
+      safeSendData();
+    });
+    
+    $("#patternPeriod").change(function(e) {
+      safeSendData();
+    });
     
     Janus.init({
      debug: false,
@@ -319,12 +335,20 @@ $(document).ready(function() {
     // Send the key data over the websocket
     //---------------------------------------------
     function sendData(){
+      
+      
+        var c=document.getElementById('rainbowify');
+        var p=document.getElementById('ledPattern');
+        var rp=document.getElementById('rainbowPeriod');
+        var pp=document.getElementById('patternPeriod');
+
+
         var toSend = "{\"Velocity\":["
         toSend += RobotMotion.FORWARD_V + "," + RobotMotion.ROTATION_V + "],";
         toSend += "\"Tilt\":[";
         toSend += CamMotion.horizontal + "," + CamMotion.vertical + "],";
         toSend += "\"RGB\":[";
-        toSend += RGB.RED + "," + RGB.GREEN + "," + RGB.BLUE + "]}";
+        toSend += RGB.RED + "," + RGB.GREEN + "," + RGB.BLUE + "," + c.checked + ",\"" + p.value + "\"," + pp.value + "," + rp.value + "]}";
         console.log(toSend);
         webSock.send(toSend);
     }

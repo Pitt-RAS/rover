@@ -27,15 +27,20 @@ class NeoPixelController
     
     void update(void);
     
-    void setPattern(const Pattern pattern, const int& period, const int& r, const int& g, const int& b);
+    void setPattern(const Pattern pattern, const int& period);
     
     void setColor(const int& r, const int& g, const int& b);
+    
+    void setRainbow(const int& period);
+    
+    uint32_t rainbowColor();
 
     uint32_t Wheel(byte WheelPos);
     
   private:
   
     static const int kMinPatternDelay = 5; //in mS
+    static const int kMaxOutputPower = 400; //r + g + b
     
     int kNumLeds;
   
@@ -47,7 +52,13 @@ class NeoPixelController
     
     int m_UpdatePeriod;
     
+    long m_RainbowTimeSinceUpdate;
+    
+    int m_RainbowUpdatePeriod;
+    
     uint32_t m_CurrentColor;
+    
+    bool rainbow;
     
     boolean m_UpdateImmediately;
     

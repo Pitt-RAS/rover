@@ -48,17 +48,20 @@ def read_ping_sensors(result):
 def led_rainbow(period):
   send_command(7, data=['r'], number=period)
   
-def led_solid(r, g, b):
-  send_command(7, data=['s', r, g, b])
+def led_solid():
+  send_command(7, data=['s'])
   
 def led_off():
   send_command(7, data=['o'])
   
 def led_color(r, g, b):
-  send_command(7, data=['c', r, g, b])
+  send_command(7, data=['C', r, g, b])
   
-def led_chasers(r, g, b, period):
-  send_command(7, data = ['C', r, g, b], number=period)
+def led_chasers(period):
+  send_command(7, data = ['c'], number=period)
+
+def led_rainbowfy(period):
+  send_command(7, data=['R'], number=period)
 
 def pack_bytes(list):
   string = ""
