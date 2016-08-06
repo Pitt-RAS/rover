@@ -30,7 +30,7 @@ def controlMotors(forwardV, rotationalV):
 #this method needs to be refactored like the ones above but needs the communication protocol to change so
 #that the serial lock is not lost when reading in a return value    
 def read_battery():
-    adc_count = send_command(3, data="A0", results=2, dType = 'h')
+    adc_count = send_command(3, data="A5", results=2, dType = 'h')
     voltage = (adc_count/1024.0) * 5.13
     battery_voltage = voltage/0.3625
     return battery_voltage

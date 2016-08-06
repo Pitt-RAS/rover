@@ -356,7 +356,7 @@ void writeServoPosition(uint8_t* command) {
       v_servo_pos = constrain(SERVO_V_CENTER - angle, 20, 180);
       break;
     case 'h':
-      h_servo_pos = constrain(SERVO_H_CENTER + angle, 0, 180);
+      h_servo_pos = constrain(SERVO_H_CENTER - angle, 0, 180);
       break;
   }
 }
