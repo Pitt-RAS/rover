@@ -18,21 +18,21 @@ if [ -z "${PID1}" ]; then
    echo "web server is not running"
 else
    echo "killing webserver"
-   sudo kill -SIGKILL $PID1
+   sudo kill -9 $PID1
 fi
 
 if [ -z "${PID2}" ]; then
    echo "Janus is not running"
 else
    echo "Killing Janus"
-   sudo kill -SIGKILL $PID2
+   sudo kill -9 $PID2
 fi
 
 if [ -z "${PID3}" ]; then
    echo "gstreamer is not running"
 else
    echo "killing gstreamer"
-   sudo kill -SIGKILL $PID3
+   sudo kill -9 $PID3
 fi
 }
 
@@ -78,7 +78,7 @@ if [ -z "${PID1}" ] || [ -z "${PID2}" ] || [ -z "${PID3}" ] ; then
     echo "Server is not running."
     exit 1
 else
-    echo "Server is running, PID(server.py)=$PID1, PID(mjpeg-streamer)=$PID2"
+    echo "Running, PID(server.py)=$PID1 , PID(janus)=$PID2, PID(gstreamer)=$PID3"
 fi
 
 }
@@ -87,7 +87,7 @@ function startcameras {
     echo "start cameras"
     
     get_pid
-    sudo kill -SIGKILL $PID3
+    sudo kill -9 $PID3
     
     gst-launch-1.0 v4l2src  device=/dev/video0 ! video/x-raw,width=640,height=480, framerate=30/1 ! omxh264enc control-rate=1 target-bitrate="$BITRATE" ! h264parse config-interval=1 ! rtph264pay pt=98 ! udpsink host=$JANUS port=8004 >> /home/pi/rover/server/gstreamer-video0.log 2>&1 &
 
