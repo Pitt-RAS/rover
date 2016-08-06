@@ -73,15 +73,21 @@
 #define STRICT_PINS true
 
 // Motor pins
-#define MOTOR_BL_PWM_PIN 10
-#define MOTOR_BL_GPIO_PIN 11
-#define MOTOR_BR_PWM_PIN 8
-#define MOTOR_BR_GPIO_PIN 9
+#define MOTOR_FL_1 10
+#define MOTOR_FL_2 11
+#define MOTOR_FL_PWM 7
 
-#define MOTOR_FR_PWM_PIN 4
-#define MOTOR_FR_GPIO_PIN 5
-#define MOTOR_FL_PWM_PIN 6
-#define MOTOR_FL_GPIO_PIN 7
+#define MOTOR_FR_1 9
+#define MOTOR_FR_2 8
+#define MOTOR_FR_PWM 6
+
+#define MOTOR_BL_1 A2
+#define MOTOR_BL_2 A3
+#define MOTOR_BL_PWM 5
+
+#define MOTOR_BR_1 A0
+#define MOTOR_BR_2 A1
+#define MOTOR_BR_PWM 12
 
 #define SERVO1_PIN 3
 #define SERVO2_PIN 2
@@ -92,7 +98,7 @@
 
 // LED's
 #define RGB_LEDS 98
-#define RGB_PIN 41
+#define RGB_PIN 14
 
 #define SERVO_SPEED 150.0/1000.0 //In degrees a millisecond
 
