@@ -347,16 +347,10 @@ $(document).ready(function() {
         // If on mobile
         if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) )
         {
-
-
-          var toSend = "{\"Velocity\":["
-          toSend += RobotMotion.FORWARD_V + "," + RobotMotion.ROTATION_V + "],";
-          toSend += "\"Tilt\":[";
-          toSend += CamMotion.horizontal + "," + CamMotion.vertical + "],";
-          toSend += "\"RGB\":[";
-          toSend += "0,0,0,false,\"Solid\",50,50]}";
-          console.log(toSend);
-          webSock.send(toSend);
+          //toSend = "{\"Tilt\":[";
+          //toSend += CamMotion.horizontal + "," + CamMotion.vertical + "]}";
+          //console.log(toSend);
+          //webSock.send(toSend);
         }
         else{
           var c=document.getElementById('rainbowify');

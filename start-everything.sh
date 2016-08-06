@@ -92,6 +92,9 @@ function startcameras {
     gst-launch-1.0 v4l2src  device=/dev/video0 ! video/x-raw,width=640,height=480, framerate=30/1 ! omxh264enc control-rate=1 target-bitrate="$BITRATE" ! h264parse config-interval=1 ! rtph264pay pt=98 ! udpsink host=$JANUS port=8004 >> /home/pi/rover/server/gstreamer-video0.log 2>&1 &
 
     gst-launch-1.0 v4l2src  device=/dev/video1 ! video/x-raw,width=640,height=480, framerate=30/1 ! omxh264enc control-rate=1 target-bitrate="$BITRATE" ! h264parse config-interval=1 ! rtph264pay pt=98 ! udpsink host=$JANUS port=8005 >> /home/pi/rover/server/gstreamer-video1.log 2>&1 &
+    
+    uvcdynctrl --device=video0 --set='Focus, Auto' 0
+    uvcdynctrl --device=video1 --set='Focus, Auto' 0
 }
 
 case "$1" in
