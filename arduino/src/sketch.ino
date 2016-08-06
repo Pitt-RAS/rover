@@ -77,8 +77,8 @@
 #define MOTOR_FL_2 11
 #define MOTOR_FL_PWM 7
 
-#define MOTOR_FR_1 9
-#define MOTOR_FR_2 8
+#define MOTOR_FR_1 8
+#define MOTOR_FR_2 9
 #define MOTOR_FR_PWM 6
 
 #define MOTOR_BL_1 A2
@@ -89,8 +89,8 @@
 #define MOTOR_BR_2 A1
 #define MOTOR_BR_PWM 12
 
-#define SERVO1_PIN 3
-#define SERVO2_PIN 2
+#define SERVO1_PIN 2
+#define SERVO2_PIN 3
 
 // Servo Center
 #define SERVO_V_CENTER 90
@@ -114,8 +114,8 @@ byte tonePin = 0;
 
 // Cut down on some conditionals by picking from an array
 byte motorPins[] = {
-  MOTOR_FL_PWM_PIN, MOTOR_FR_PWM_PIN, MOTOR_BL_PWM_PIN, MOTOR_BR_PWM_PIN,
-  MOTOR_FL_GPIO_PIN, MOTOR_FR_GPIO_PIN, MOTOR_BL_GPIO_PIN, MOTOR_BR_GPIO_PIN
+  MOTOR_FL_1, MOTOR_FL_2, MOTOR_FL_PWM, MOTOR_FR_1, MOTOR_FR_2, MOTOR_FR_PWM,
+  MOTOR_BL_1, MOTOR_BL_2, MOTOR_BL_PWM, MOTOR_BR_1, MOTOR_BR_2, MOTOR_BR_PWM
 };
 
 NewPing ping_sensors[] = {
@@ -162,7 +162,7 @@ void setup() {
   Serial1.begin(115200); //For streaming debug info to another arduino that prints it on the screen
 
   // Set the pin mode for each motor pin, and mark it for future reference
-  for (int k = 0; k < 8; k++) {
+  for (int k = 0; k < 12; k++) {
     pinModes[motorPins[k]] = OUTPUT + 1;
     pinMode(motorPins[k], OUTPUT);
   }
@@ -220,44 +220,38 @@ void runMotorCommand(uint8_t* command) {
   int pwml = (forwardPercent + rotationPercent) * 255 / 100; // Forward plus rotation on that side
   int pwmr = (forwardPercent - rotationPercent) * 255 / 100; // Forward minus rotation, no need to subtract because the motor is on the other side of the robot
     
-  // Front Left
+    
+  analogWrite(MOTOR_BL_PWM, abs(pwml));
+  analogWrite(MOTOR_FL_PWM, abs(pwml));
+
+  // Left
   if(pwml >= 0){ // Forward
-    digitalWrite(MOTOR_FL_GPIO_PIN, LOW);
-    analogWrite(MOTOR_FL_PWM_PIN, pwml);
+    digitalWrite(MOTOR_FL_1, LOW);
+    digitalWrite(MOTOR_FL_2, HIGH);
+    digitalWrite(MOTOR_BL_1, LOW);
+    digitalWrite(MOTOR_BL_2, HIGH);
   }
   else{ // Reverse
-    digitalWrite(MOTOR_FL_GPIO_PIN, HIGH);
-    analogWrite(MOTOR_FL_PWM_PIN, 255 + pwml);
+    digitalWrite(MOTOR_FL_1, HIGH);
+    digitalWrite(MOTOR_FL_2, LOW);
+    digitalWrite(MOTOR_BL_1, HIGH);
+    digitalWrite(MOTOR_BL_2, LOW);
   }
   
-  // Front Right
+  // Right
+  analogWrite(MOTOR_BR_PWM, abs(pwmr));
+  analogWrite(MOTOR_FR_PWM, abs(pwmr));
   if(pwmr >= 0){ // Forward
-    digitalWrite(MOTOR_FR_GPIO_PIN, HIGH);
-    analogWrite(MOTOR_FR_PWM_PIN, 255 - pwmr);
+    digitalWrite(MOTOR_FR_1, LOW);
+    digitalWrite(MOTOR_FR_2, HIGH);
+    digitalWrite(MOTOR_BR_1, LOW);
+    digitalWrite(MOTOR_BR_2, HIGH);
   }
   else{ // Reverse
-    digitalWrite(MOTOR_FR_GPIO_PIN, LOW);
-    analogWrite(MOTOR_FR_PWM_PIN, abs(pwmr));
-  }
-  
-  // Back Left
-  if(pwml >= 0){ // Forward
-    digitalWrite(MOTOR_BL_GPIO_PIN, HIGH);
-    analogWrite(MOTOR_BL_PWM_PIN, 255 - pwml);
-  }
-  else{ // Reverse
-    digitalWrite(MOTOR_BL_GPIO_PIN, LOW);
-    analogWrite(MOTOR_BL_PWM_PIN, abs(pwml));
-  }
-  
-  // Back Right
-  if(pwmr >= 0){ // Forward
-    digitalWrite(MOTOR_BR_GPIO_PIN, LOW);
-    analogWrite(MOTOR_BR_PWM_PIN, pwmr);
-  }
-  else{ // Reverse
-    digitalWrite(MOTOR_BR_GPIO_PIN, HIGH);
-    analogWrite(MOTOR_BR_PWM_PIN, 255 + pwmr);
+    digitalWrite(MOTOR_FR_1, HIGH);
+    digitalWrite(MOTOR_FR_2, LOW);
+    digitalWrite(MOTOR_BR_1, HIGH);
+    digitalWrite(MOTOR_BR_2, LOW);
   }
   
 }
