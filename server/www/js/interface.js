@@ -410,7 +410,6 @@ function connectJanus()
   janus = new Janus(
     {
       server: server,
-      iceServers: [{url: "turn:127.0.0.1:9000?transport=udp", username: "rover", credential: "rover"}],
       success: function() {
         // Attach to streaming1 plugin
         janus.attach(
@@ -441,7 +440,7 @@ function connectJanus()
                   });
               }
             },
-            onremotestream: function(stream) { console.log("stream 1 got connected!"); attachMediaStream($('#remotevideo1').get(0), stream); }
+            onremotestream: function(stream) { console.log("stream 1 got connected!" + stream.VideoStreamTrack); attachMediaStream($('#remotevideo1').get(0), stream); }
           });
         
         //Attatch to streaming2 plugin
