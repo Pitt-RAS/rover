@@ -44,8 +44,6 @@ var streaming2 = null;
 $(document).ready(function() {
     console.log("yo");
     var input = $("#hex");
-    var cw = input_example();
-    cw.onchange(function() {callback(cw.color())});
         
     $( "#rainbowify" ).change(function() {
       safeSendData();
@@ -67,7 +65,7 @@ $(document).ready(function() {
      debug: false,
      callback: function() { connectJanus(); }
     });
-    
+    console.log("janus inited");
 
     var webSock = new WebSocket("ws://" + window.location.hostname + ":" + window.location.port + "/keysocket");
     webSock.onmessage = getData;
@@ -95,7 +93,13 @@ $(document).ready(function() {
             , rfs = el.requestFullScreen || el.webkitRequestFullScreen || el.mozRequestFullScreen;
             rfs.call(el);
             });
-        }
+    }
+    // If we aren't on mobile init the colorwheel
+    else
+    {
+      var cw = input_example();
+      cw.onchange(function() {callback(cw.color())});
+    }
     
     $('#fullscreen-button').click(toggleFullscreen);
     
@@ -290,8 +294,8 @@ $(document).ready(function() {
         //$('#rotBeta').text(b);
         //$('#rotGamma').text(g);
         
-        CamMotion.vertical = g;
-        CamMotion.horizontal = a;
+        CamMotion.vertical = -g;
+        CamMotion.horizontal = -a;
 
         // Update the tilt display
         updateTiltDot();
@@ -337,20 +341,44 @@ $(document).ready(function() {
     function sendData(){
       
       
-        var c=document.getElementById('rainbowify');
-        var p=document.getElementById('ledPattern');
-        var rp=document.getElementById('rainbowPeriod');
-        var pp=document.getElementById('patternPeriod');
+
+        
+        
+        // If on mobile
+        if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) )
+        {
 
 
-        var toSend = "{\"Velocity\":["
-        toSend += RobotMotion.FORWARD_V + "," + RobotMotion.ROTATION_V + "],";
-        toSend += "\"Tilt\":[";
-        toSend += CamMotion.horizontal + "," + CamMotion.vertical + "],";
-        toSend += "\"RGB\":[";
-        toSend += RGB.RED + "," + RGB.GREEN + "," + RGB.BLUE + "," + c.checked + ",\"" + p.value + "\"," + pp.value + "," + rp.value + "]}";
-        console.log(toSend);
-        webSock.send(toSend);
+          var toSend = "{\"Velocity\":["
+          toSend += RobotMotion.FORWARD_V + "," + RobotMotion.ROTATION_V + "],";
+          toSend += "\"Tilt\":[";
+          toSend += CamMotion.horizontal + "," + CamMotion.vertical + "],";
+          toSend += "\"RGB\":[";
+          toSend += "0,0,0,false,\"Solid\",50,50]}";
+          console.log(toSend);
+          webSock.send(toSend);
+        }
+        else{
+          var c=document.getElementById('rainbowify');
+          var p=document.getElementById('ledPattern');
+          var rp=document.getElementById('rainbowPeriod');
+          var pp=document.getElementById('patternPeriod');
+
+
+          var toSend = "{\"Velocity\":["
+          toSend += RobotMotion.FORWARD_V + "," + RobotMotion.ROTATION_V + "],";
+          
+          if($( "#sendorientation" ).is(':checked') )
+          {
+            toSend += "\"Tilt\":[";
+            toSend += CamMotion.horizontal + "," + CamMotion.vertical + "],";
+          }
+          toSend += "\"RGB\":[";
+          toSend += RGB.RED + "," + RGB.GREEN + "," + RGB.BLUE + "," + c.checked + ",\"" + p.value + "\"," + pp.value + "," + rp.value + "]}";
+          console.log(toSend);
+          webSock.send(toSend);
+        }
+        
     }
 
     //---------------------------------------------
