@@ -30,9 +30,10 @@ def controlMotors(forwardV, rotationalV):
 #this method needs to be refactored like the ones above but needs the communication protocol to change so
 #that the serial lock is not lost when reading in a return value    
 def read_battery():
-    adc_count = send_command(3, data="A5", results=2, dType = 'h')
-    voltage = (adc_count/1024.0) * 5.13
-    battery_voltage = voltage/0.3625
+    # Pin 59 corresponds to A5 on the arduino mega.
+    adc_count = send_command(3, data=[59], results=2, dType = 'h')
+    voltage = (adc_count/1024.0) * 5.02
+    battery_voltage = voltage * 3.2243
     return battery_voltage
 
 #this method needs to be refactored like the ones above but needs the communication protocol to change so
