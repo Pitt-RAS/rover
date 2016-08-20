@@ -67,8 +67,10 @@ $(document).ready(function() {
     });
     console.log("janus inited");
 
-    var webSock = new WebSocket("ws://" + window.location.hostname + ":" + window.location.port + "/keysocket");
-    webSock.onmessage = getData;
+    // var webSock = new WebSocket("ws://" + window.location.hostname + ":" + window.location.port + "/keysocket");
+    // webSock.onmessage = getData;
+
+
   
     if($('#SwapEyes').length > 0){
         document.getElementById ("SwapEyes").addEventListener ("click", swapEyes, false);
@@ -173,9 +175,58 @@ $(document).ready(function() {
                 break;
             case "ping_sensors":
                 $('#ping-display').text(JSON.stringify(msg.data));
+                var d = msg;
+                sensorIndicatorDraw(d.fr,d.r,d.br,d.b,d.bl,d.l,d.fl);
                 break;
         }
     }
+
+    var c = document.getElementById("sensorIndicator");
+    var ctx = c.getContext("2d");
+
+    function toHexColor(value)
+    {
+        var newValue = 255 - Math.floor(value / 90 * 255);
+        var hex = newValue.toString(16);
+        if(hex.length < 2)
+            hex = "0" + hex;
+        hex = "#" + hex + "0000"
+        return hex;
+    }
+
+    function sensorIndicatorDraw(valueNE, valueE, valueSE, valueS, valueSW, valueW, valueNW)
+    {
+        ctx.fillStyle = "#000000"
+        ctx.fillStyle = toHexColor(valueNW);
+        ctx.fillRect(10, 10, 50, 50)
+        ctx.fillStyle = toHexColor(valueNE);
+        ctx.fillRect(130, 10, 50, 50)
+
+        ctx.fillStyle = toHexColor(valueW);
+        ctx.fillRect(10, 70, 50, 50)
+        ctx.fillStyle = toHexColor(valueE);
+        ctx.fillRect(130, 70, 50, 50)
+
+        ctx.fillStyle = toHexColor(valueSW);
+        ctx.fillRect(10, 130, 50, 50)
+        ctx.fillStyle = toHexColor(valueW);
+        ctx.fillRect(70, 130, 50, 50)
+        ctx.fillStyle = toHexColor(valueSE);
+        ctx.fillRect(130, 130, 50, 50)
+
+        ctx.fillStyle = "#33cccc";
+        ctx.font = "20px arial";
+        ctx.fillText(valueSE, 140, 155);
+        ctx.fillText(valueE, 140, 105);
+        ctx.fillText(valueNE, 140, 35);
+
+        ctx.fillText(valueS, 80, 155);
+
+        ctx.fillText(valueSW, 20, 155);
+        ctx.fillText(valueW, 20, 105);
+        ctx.fillText(valueNW, 20, 35);
+    }
+
 
     //---------------------------------------------
     // setKeyDown
