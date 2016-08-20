@@ -369,37 +369,41 @@ void readPing(uint8_t* command) {
     case 'f':
       switch (command[1]) {
         case 'r':
-          index = 6;
+          index = 1; //
           break;
         case 'l':
-          index = 5;
+          index = 2; //
           break;
       }
       break;
     case 'r':
-      index = 4;
+      index = 0; //
       break;
     case 'l':
-      index = 3;
+      index = 3; //
       break;
     case 'b':
       switch (command[1]) {
         case 'r':
-          index = 2;
+          index = 4; //
           break;
         case 'l':
-          index = 1;
+          index = 6; //
           break;
         case ' ':
-          index = 0;
+          index = 5; //
           break;
       }
       break;
   }
   if (index >= 0) {
-    PiComSendData(0.0f);
-    //PiComSendData((float)ping_sensors[index].ping_cm());
+
+    float cm = (float)ping_sensors[index].ping_cm();
+    cm = constrain(cm, 0, 90);
+
+    PiComSendData(cm);
   }
+  delay(10);
 }
 
 void ledSet(uint8_t* command)
