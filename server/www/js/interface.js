@@ -67,8 +67,8 @@ $(document).ready(function() {
     });
     console.log("janus inited");
 
-    // var webSock = new WebSocket("ws://" + window.location.hostname + ":" + window.location.port + "/keysocket");
-    // webSock.onmessage = getData;
+    var webSock = new WebSocket("ws://" + window.location.hostname + ":" + window.location.port + "/keysocket");
+    webSock.onmessage = getData;
 
 
   
