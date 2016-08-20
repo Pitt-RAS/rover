@@ -119,13 +119,13 @@ byte motorPins[] = {
 };
 
 NewPing ping_sensors[] = {
-  NewPing(53, 51),
-  NewPing(49, 47),
+  NewPing(50, 52),
+  NewPing(42, 44),
+  NewPing(34, 36),
+  NewPing(26, 28),
+  NewPing(51, 53),
   NewPing(45, 43),
-  NewPing(35, 37),
-  NewPing(31, 33),
-  NewPing(27, 29),
-  NewPing(23, 25)
+  NewPing(37, 35)
 };
 
 // Analog pins, for easy access in getPin
