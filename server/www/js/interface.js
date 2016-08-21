@@ -175,7 +175,7 @@ $(document).ready(function() {
                 break;
             case "ping_sensors":
                 $('#ping-display').text(JSON.stringify(msg.data));
-                var d = msg;
+                var d = msg.data;
                 sensorIndicatorDraw(d.fr,d.r,d.br,d.b,d.bl,d.l,d.fl);
                 break;
         }
