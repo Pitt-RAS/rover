@@ -216,15 +216,15 @@ $(document).ready(function() {
 
         ctx.fillStyle = "#33cccc";
         ctx.font = "20px arial";
-        ctx.fillText(valueSE, 140, 155);
-        ctx.fillText(valueE, 140, 105);
-        ctx.fillText(valueNE, 140, 35);
+        ctx.fillText((valueSE/2.54).toFixed(0), 140, 155);
+        ctx.fillText((valueE/2.54).toFixed(0), 140, 105);
+        ctx.fillText((valueNE/2.54).toFixed(0), 140, 35);
 
-        ctx.fillText(valueS, 80, 155);
+        ctx.fillText((valueS/2.54).toFixed(0), 80, 155);
 
-        ctx.fillText(valueSW, 20, 155);
-        ctx.fillText(valueW, 20, 105);
-        ctx.fillText(valueNW, 20, 35);
+        ctx.fillText((valueSW/2.54).toFixed(0), 20, 155);
+        ctx.fillText((valueW/2.54).toFixed(0), 20, 105);
+        ctx.fillText((valueNW/2.54).toFixed(0), 20, 35);
     }
 
 

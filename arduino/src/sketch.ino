@@ -128,6 +128,12 @@ NewPing ping_sensors[] = {
   NewPing(37, 35)
 };
 
+float ping_sensor_values[7];
+
+float ping_sensor_time = 0;
+
+char ping_sensor_index = 0;
+
 // Analog pins, for easy access in getPin
 byte aPins[] = {A0, A1 ,A2, A3, A4, A5, A6, A7};
 
@@ -206,6 +212,14 @@ void loop() {
   
   led_strip.update();
   
+  if(millis() - ping_sensor_time > 9)
+  {
+    ping_sensor_time = millis();
+    
+    ping_sensor_values[ping_sensor_index] = (float)ping_sensors[ping_sensor_index].ping_cm();
+    
+    ping_sensor_index = (ping_sensor_index+1)%7;
+  }
 }
 
 //----------------------------------------------------------------------------
@@ -398,12 +412,11 @@ void readPing(uint8_t* command) {
   }
   if (index >= 0) {
 
-    float cm = (float)ping_sensors[index].ping_cm();
+    float cm = ping_sensor_values[index];
     cm = constrain(cm, 0, 90);
 
     PiComSendData(cm);
   }
-  delay(10);
 }
 
 void ledSet(uint8_t* command)
